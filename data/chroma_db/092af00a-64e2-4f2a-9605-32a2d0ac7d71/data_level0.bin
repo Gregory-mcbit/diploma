@@ -1,0 +1,3737 @@
+  0
+      ]
+
+    >>> import numpy as np
+    >>> pa.array(pd.Series([1, 2]), mask=np.array([0, 1], dtype=bool))
+    <pyarrow.lib.Int64Array object at ...>
+    [
+      1,
+      null
+    ]
+
+    >>> arr = pa.array(range(1024), type=pa.dictionary(pa.int8(), pa.int64()))
+    >>> arr.type.index_type
+    DataType(int16)
+    
+        Create shallow copy of record batch by replacing schema
+        key-value metadata with the indicated new metadata (which may be None,
+        which deletes any existing metadata
+
+        Parameters
+        ----------
+        metadata : dict, default None
+
+        Returns
+        -------
+        shallow_copy : RecordBatch
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> n_legs = pa.array([2, 2, 4, 4, 5, 100])
+
+        Constructing a RecordBatch with schema and metadata:
+
+        >>> my_schema = pa.schema([
+        ...     pa.field('n_legs', pa.int64())],
+        ...     metadata={"n_legs": "Number of legs per animal"})
+        >>> batch = pa.RecordBatch.from_arrays([n_legs], schema=my_schema)
+        >>> batch.schema
+        n_legs: int64
+        -- schema metadata --
+        n_legs: 'Number of legs per animal'
+
+        Shallow copy of a RecordBatch with deleted schema metadata:
+
+        >>> batch.replace_schema_metadata().schema
+        n_legs: int64
+        
+        Create shallow copy of table by replacing schema
+        key-value metadata with the indicated new metadata (which may be None),
+        which deletes any existing metadata.
+
+        Parameters
+        ----------
+        metadata : dict, default None
+
+        Returns
+        -------
+        Table
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> import pandas as pd
+        >>> df = pd.DataFrame({'year': [2020, 2022, 2019, 2021],
+        ...                    'n_legs': [2, 4, 5, 100],
+        ...                    'animals': ["Flamingo", "Horse", "Brittle stars", "Centipede"]})
+        >>> table = pa.Table.from_pandas(df)
+
+        Constructing a Table with pyarrow schema and metadata:
+
+        >>> my_schema = pa.schema([
+        ...     pa.field('n_legs', pa.int64()),
+        ...     pa.field('animals', pa.string())],
+        ...     metadata={"n_legs": "Number of legs per animal"})
+        >>> table= pa.table(df, my_schema)
+        >>> table.schema
+        n_legs: int64
+        animals: string
+        -- schema metadata --
+        n_legs: 'Number of legs per animal'
+        pandas: ...
+
+        Create a shallow copy of a Table with deleted schema metadata:
+
+        >>> table.replace_schema_metadata().schema
+        n_legs: int64
+        animals: string
+
+        Create a shallow copy of a Table with new schema metadata:
+
+        >>> metadata={"animals": "Which animal"}
+        >>> table.replace_schema_metadata(metadata = metadata).schema
+        n_legs: int64
+        animals: string
+        -- schema metadata --
+        animals: 'Which animal'
+        
+    Create single-precision floating point type.
+
+    Examples
+    --------
+    Create an instance of float32 type:
+
+    >>> import pyarrow as pa
+    >>> pa.float32()
+    DataType(float)
+    >>> print(pa.float32())
+    float
+
+    Create an array with float32 type:
+
+    >>> pa.array([0.0, 1.0, 2.0], type=pa.float32())
+    <pyarrow.lib.FloatArray object at ...>
+    [
+      0,
+      1,
+      2
+    ]
+    
+    Create variable-length or fixed size binary type.
+
+    Parameters
+    ----------
+    length : int, optional, default -1
+        If length == -1 then return a variable length binary type. If length is
+        greater than or equal to 0 then return a fixed size binary type of
+        width `length`.
+
+    Examples
+    --------
+    Create an instance of a variable-length binary type:
+
+    >>> import pyarrow as pa
+    >>> pa.binary()
+    DataType(binary)
+
+    and use the variable-length binary type to create an array:
+
+    >>> pa.array(['foo', 'bar', 'baz'], type=pa.binary())
+    <pyarrow.lib.BinaryArray object at ...>
+    [
+      666F6F,
+      626172,
+      62617A
+    ]
+
+    Create an instance of a fixed-size binary type:
+
+    >>> pa.binary(3)
+    FixedSizeBinaryType(fixed_size_binary[3])
+
+    and use the fixed-length binary type to create an array:
+
+    >>> pa.array(['foo', 'bar', 'baz'], type=pa.binary(3))
+    <pyarrow.lib.FixedSizeBinaryArray object at ...>
+    [
+      666F6F,
+      626172,
+      62617A
+    ]
+    -D array to bool8 arrayDataType.bit_width.__get__ (line 257)DataType.byte_width.__get__ (line 276)DataType.equals (line 370)DataType expected, got DataType.has_variadic_buffers.__get__ (line 336)DataType.num_buffers.__get__ (line 320)DataType.num_fields.__get__ (line 298)DataType.to_pandas_dtype (line 400)Decimal128Type.precision.__get__ (line 1545)Decimal128Type.scale.__get__ (line 1559)Decimal256Type.precision.__get__ (line 1594)Decimal256Type.scale.__get__ (line 1608)Decimal32Type.precision.__get__ (line 1447)Decimal32Type.scale.__get__ (line 1461)Decimal64Type.precision.__get__ (line 1496)Decimal64Type.scale.__get__ (line 1510)
+        Declare a grouping over the columns of the table.
+
+        Resulting grouping can then be used to perform aggregations
+        with a subsequent ``aggregate()`` method.
+
+        Parameters
+        ----------
+        keys : str or list[str]
+            Name of the columns that should be used as the grouping key.
+        use_threads : bool, default True
+            Whether to use multithreading or not. When set to True (the
+            default), no stable ordering of the output is guaranteed.
+
+        Returns
+        -------
+        TableGroupBy
+
+        See Also
+        --------
+        TableGroupBy.aggregate
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> import pyarrow as pa
+        >>> df = pd.DataFrame({'year': [2020, 2022, 2021, 2022, 2019, 2021],
+        ...                    'n_legs': [2, 2, 4, 4, 5, 100],
+        ...                    'animal': ["Flamingo", "Parrot", "Dog", "Horse",
+        ...                    "Brittle stars", "Centipede"]})
+        >>> table = pa.Table.from_pandas(df)
+        >>> table.group_by('year').aggregate([('n_legs', 'sum')])
+        pyarrow.Table
+        year: int64
+        n_legs_sum: int64
+        ----
+        year: [[2020,2022,2021,2019]]
+        n_legs_sum: [[2,6,104,5]]
+        . Detail: Device on which the data resides differs between buffers: DictionaryType.index_type.__get__ (line 519)DictionaryType.ordered.__get__ (line 505)DictionaryType.value_type.__get__ (line 532)
+    Dictionary (categorical, or simply encoded) type.
+
+    Parameters
+    ----------
+    index_type : DataType
+    value_type : DataType
+    ordered : bool
+
+    Returns
+    -------
+    type : DictionaryType
+
+    Examples
+    --------
+    Create an instance of dictionary type:
+
+    >>> import pyarrow as pa
+    >>> pa.dictionary(pa.int64(), pa.utf8())
+    DictionaryType(dictionary<values=string, indices=int64, ordered=0>)
+
+    Use dictionary type to create an array:
+
+    >>> pa.array(["a", "b", None, "d"], pa.dictionary(pa.int64(), pa.utf8()))
+    <pyarrow.lib.DictionaryArray object at ...>
+    ...
+    -- dictionary:
+      [
+        "a",
+        "b",
+        "d"
+      ]
+    -- indices:
+      [
+        0,
+        1,
+        null,
+        2
+      ]
+    
+        Dimensions of the table or record batch: (#rows, #columns).
+
+        Returns
+        -------
+        (int, int)
+            Number of rows and number of columns.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> table = pa.table({'n_legs': [None, 4, 5, None],
+        ...                   'animals': ["Flamingo", "Horse", None, "Centipede"]})
+        >>> table.shape
+        (4, 2)
+        Do not call Do not call Buffer's constructor directly, use `pyarrow.py_buffer` function instead.Do not call ChunkedArray's constructor directly, use `chunked_array` function instead.Do not call Device's constructor directly, use the device attribute of the MemoryManager instead.Do not call Field's constructor directly, use `pyarrow.field` instead.Do not call MemoryManager's constructor directly, use pyarrow.default_cpu_memory_manager() instead.Do not call Schema's constructor directly, use `pyarrow.schema` instead.Do not call SparseCOOTensor's constructor directly, use one of the `pyarrow.SparseCOOTensor.from_*` functions instead.Do not call SparseCSCMatrix's constructor directly, use one of the `pyarrow.SparseCSCMatrix.from_*` functions instead.Do not call SparseCSFTensor's constructor directly, use one of the `pyarrow.SparseCSFTensor.from_*` functions instead.Do not call SparseCSRMatrix's constructor directly, use one of the `pyarrow.SparseCSRMatrix.from_*` functions instead.Do not call Tensor's constructor directly, use one of the `pyarrow.Tensor.from_*` functions instead.
+        Drop one or more columns and return a new Table or RecordBatch.
+
+        Parameters
+        ----------
+        columns : str or list[str]
+            Field name(s) referencing existing column(s).
+
+        Raises
+        ------
+        KeyError
+            If any of the passed column names do not exist.
+
+        Returns
+        -------
+        Table or RecordBatch
+            A tabular object without the column(s).
+
+        Examples
+        --------
+        Table (works similarly for RecordBatch)
+
+        >>> import pyarrow as pa
+        >>> import pandas as pd
+        >>> df = pd.DataFrame({'n_legs': [2, 4, 5, 100],
+        ...                    'animals': ["Flamingo", "Horse", "Brittle stars", "Centipede"]})
+        >>> table = pa.Table.from_pandas(df)
+
+        Drop one column:
+
+        >>> table.drop_columns("animals")
+        pyarrow.Table
+        n_legs: int64
+        ----
+        n_legs: [[2,4,5,100]]
+
+        Drop one or more columns:
+
+        >>> table.drop_columns(["n_legs", "animals"])
+        pyarrow.Table
+        ...
+        ----
+        Duplicate key {}, use pass all items as list of tuples if you intend to have duplicate keysDurationType.unit.__get__ (line 1390)Each element of dim_names must be a stringEncountered key 'End of Arrow streamExpected 1-dimensional array for SparseCSRMatrix indptrExpected 1-dimensional array for SparseCSRMatrix indicesExpected 1-dimensional array for SparseCSCMatrix indptrExpected 1-dimensional array for SparseCSCMatrix indicesExpected 2-dimensional array for SparseCOOTensor indicesExpected Array, got Expected Schema, got Expected a list of 1-dimensional arrays for SparseCSFTensor.indptrExpected a list of 1-dimensional arrays for SparseCSFTensor.indicesExpected a non-empty ndarrayExpected a pointer value, got Expected an object implementing the Arrow PyCapsule Protocol for streams (i.e. having a `__arrow_c_stream__` method), got Expected an object implementing the Arrow PyCapsule Protocol for schema (i.e. having a `__arrow_c_schema__` method), got Expected array or chunked array, got Expected file path, but Expected int index, got type 'Expected integerExpected integer or string indexExpected list of Expected list or tuple, got Expected pandas DataFrame or list of arraysExpected pandas DataFrame, python dictionary or list of arraysExpected scipy.sparse.coo_array or scipy.sparse.coo_matrix, got Expected scipy.sparse.csc_array or scipy.sparse.csc_matrix, got Expected scipy.sparse.csr_array or scipy.sparse.csr_matrix, got Expected sparse.COO, got Failed to allocate Field "Field.equals (line 2497)Field.flatten (line 2761)Field.metadata.__get__ (line 2572)Field.name.__get__ (line 2558)Field.nullable.__get__ (line 2541)Field.remove_metadata (line 2629)Field.with_metadata (line 2595)Field.with_name (line 2690)Field.with_nullable (line 2722)Field.with_type (line 2655)File object is malformed, has no mode
+        Find the first index of a value.
+
+        See :func:`pyarrow.compute.index` for full usage.
+
+        Parameters
+        ----------
+        value : Scalar or object
+            The value to look for in the array.
+        start : int, optional
+            The start index where to look for `value`.
+        end : int, optional
+            The end index where to look for `value`.
+        memory_pool : MemoryPool, optional
+            A memory pool for potential memory allocations.
+
+        Returns
+        -------
+        index : Int64Scalar
+            The index of the value in the array (-1 if not found).
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> n_legs = pa.chunked_array([[2, 2, 4], [4, 5, 100]])
+        >>> n_legs
+        <pyarrow.lib.ChunkedArray object at ...>
+        [
+          [
+            2,
+            2,
+            4
+          ],
+          [
+            4,
+            5,
+            100
+          ]
+        ]
+        >>> n_legs.index(4)
+        <pyarrow.Int64Scalar: 2>
+        >>> n_legs.index(4, start=3)
+        <pyarrow.Int64Scalar: 3>
+        First stride needs to be largest to ensure that individual tensor data is contiguous in memory.FixedShapeTensorArray.from_numpy_ndarray (line 4660)FixedSizeListArray.from_arrays (line 3590)FixedSizeListArray.values.__get__ (line 3675)FixedSizeListType.list_size.__get__ (line 863)FixedSizeListType.value_field.__get__ (line 837)FixedSizeListType.value_type.__get__ (line 850)
+        Flatten this ChunkedArray.  If it has a struct type, the column is
+        flattened into one array per struct field.
+
+        Parameters
+        ----------
+        memory_pool : MemoryPool, default None
+            For memory allocations, if required, otherwise use default pool
+
+        Returns
+        -------
+        result : list of ChunkedArray
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> n_legs = pa.chunked_array([[2, 2, 4], [4, 5, 100]])
+        >>> c_arr = pa.chunked_array(n_legs.value_counts())
+        >>> c_arr
+        <pyarrow.lib.ChunkedArray object at ...>
+        [
+          -- is_valid: all not null
+          -- child 0 type: int64
+            [
+              2,
+              4,
+              5,
+              100
+            ]
+          -- child 1 type: int64
+            [
+              2,
+              2,
+              1,
+              1
+            ]
+        ]
+        >>> c_arr.flatten()
+        [<pyarrow.lib.ChunkedArray object at ...>
+        [
+          [
+            2,
+            4,
+            5,
+            100
+          ]
+        ], <pyarrow.lib.ChunkedArray object at ...>
+        [
+          [
+            2,
+            2,
+            1,
+            1
+          ]
+        ]]
+        >>> c_arr.type
+        StructType(struct<values: int64, counts: int64>)
+        >>> n_legs.type
+        DataType(int64)
+        
+        Flatten this ChunkedArray into a single non-chunked array.
+
+        Parameters
+        ----------
+        memory_pool : MemoryPool, default None
+            For memory allocations, if required, otherwise use default pool
+
+        Returns
+        -------
+        result : Array
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> n_legs = pa.chunked_array([[2, 2, 4], [4, 5, 100]])
+        >>> n_legs
+        <pyarrow.lib.ChunkedArray object at ...>
+        [
+          [
+            2,
+            2,
+            4
+          ],
+          [
+            4,
+            5,
+            100
+          ]
+        ]
+        >>> n_legs.combine_chunks()
+        <pyarrow.lib.Int64Array object at ...>
+        [
+          2,
+          2,
+          4,
+          4,
+          5,
+          100
+        ]
+        
+        Flatten this Table.
+
+        Each column with a struct type is flattened
+        into one column per struct field.  Other columns are left unchanged.
+
+        Parameters
+        ----------
+        memory_pool : MemoryPool, default None
+            For memory allocations, if required, otherwise use default pool
+
+        Returns
+        -------
+        Table
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> struct = pa.array([{'n_legs': 2, 'animals': 'Parrot'},
+        ...                    {'year': 2022, 'n_legs': 4}])
+        >>> month = pa.array([4, 6])
+        >>> table = pa.Table.from_arrays([struct,month],
+        ...                              names = ["a", "month"])
+        >>> table
+        pyarrow.Table
+        a: struct<animals: string, n_legs: int64, year: int64>
+          child 0, animals: string
+          child 1, n_legs: int64
+          child 2, year: int64
+        month: int64
+        ----
+        a: [
+          -- is_valid: all not null
+          -- child 0 type: string
+        ["Parrot",null]
+          -- child 1 type: int64
+        [2,4]
+          -- child 2 type: int64
+        [null,2022]]
+        month: [[4,6]]
+
+        Flatten the columns with struct field:
+
+        >>> table.flatten()
+        pyarrow.Table
+        a.animals: string
+        a.n_legs: int64
+        a.year: int64
+        month: int64
+        ----
+        a.animals: [["Parrot",null]]
+        a.n_legs: [[2,4]]
+        a.year: [[null,2022]]
+        month: [[4,6]]
+        
+        Flatten this field.  If a struct field, individual child fields
+        will be returned with their names prefixed by the parent's name.
+
+        Returns
+        -------
+        fields : List[pyarrow.Field]
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> f1 = pa.field('bar', pa.float64(), nullable=False)
+        >>> f2 = pa.field('foo', pa.int32()).with_metadata({"key": "Something important"})
+        >>> ff = pa.field('ff', pa.struct([f1, f2]), nullable=False)
+
+        Flatten a struct field:
+
+        >>> ff
+        pyarrow.Field<ff: struct<bar: double not null, foo: int32> not null>
+        >>> ff.flatten()
+        [pyarrow.Field<ff.bar: double not null>, pyarrow.Field<ff.foo: int32>]
+        ). For now ignoring the specified type, but in the future this mismatch will raise a TypeErrorIO thread count must be strictly positiveIPC read statistics
+
+    Parameters
+    ----------
+    num_messages : int
+        Number of messages.
+    num_record_batches : int
+        Number of record batches.
+    num_dictionary_batches : int
+        Number of dictionary batches.
+    num_dictionary_deltas : int
+        Delta of dictionaries.
+    num_replaced_dictionaries : int
+        Number of replaced dictionaries.
+    IPC write statistics
+
+    Parameters
+    ----------
+    num_messages : int
+        Number of messages.
+    num_record_batches : int
+        Number of record batches.
+    num_dictionary_batches : int
+        Number of dictionary batches.
+    num_dictionary_deltas : int
+        Delta of dictionaries.
+    num_replaced_dictionaries : int
+        Number of replaced dictionaries.
+    I/O operation on closed file
+        If True, the number of expected buffers is only
+        lower-bounded by num_buffers.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> pa.int64().has_variadic_buffers
+        False
+        >>> pa.string_view().has_variadic_buffers
+        True
+        Implemented only for data on CPU deviceImplemented only for data on CPU device or data with equal addressesIncompatible storage type Incompatible storage type for Index must either be string or integerIndices must be integer typeInvalid file mode: Invalid promote_options: Invalid time unit: Invalid time unit for time32: Invalid time unit for time64: Invalid union mode Invalid value for compression: Invalid value for 'maps_as_pydicts': valid values are 'lossy', 'strict' or `None` (default). Received Invalid value for 'maps_as_pydicts': valid values are 'lossy', 'strict' or `None` (default). Received 'Invalid value of whence: 
+        Is this tensor contiguous in memory.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> import numpy as np
+        >>> x = np.array([[2, 2, 4], [4, 5, 100]], np.int32)
+        >>> tensor = pa.Tensor.from_numpy(x, dim_names=["dim1","dim2"])
+        >>> tensor.is_contiguous
+        True
+        
+        Is this tensor mutable or immutable.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> import numpy as np
+        >>> x = np.array([[2, 2, 4], [4, 5, 100]], np.int32)
+        >>> tensor = pa.Tensor.from_numpy(x, dim_names=["dim1","dim2"])
+        >>> tensor.is_mutable
+        True
+        Iterable should contain Array objects, got 
+        Iterator over all columns in their numerical order.
+
+        Yields
+        ------
+        Array (for RecordBatch) or ChunkedArray (for Table)
+
+        Examples
+        --------
+        Table (works similarly for RecordBatch)
+
+        >>> import pyarrow as pa
+        >>> import pandas as pd
+        >>> df = pd.DataFrame({'n_legs': [None, 4, 5, None],
+        ...                    'animals': ["Flamingo", "Horse", None, "Centipede"]})
+        >>> table = pa.Table.from_pandas(df)
+        >>> for i in table.itercolumns():
+        ...     print(i.null_count)
+        ...
+        2
+        1
+        LargeListArray.values.__get__ (line 2909)LargeListType.value_type.__get__ (line 620)LargeListViewArray.from_arrays (line 3225)LargeListViewArray.offsets.__get__ (line 3385)LargeListViewArray.sizes.__get__ (line 3416)LargeListViewArray.values.__get__ (line 3326)LargeListViewType.value_field.__get__ (line 702)LargeListViewType.value_type.__get__ (line 715)LargeListView requires DataType or FieldLength must be non-negativeLength of names (Less than one byteListArray.from_arrays (line 2678)ListArray.offsets.__get__ (line 2827)ListArray.values.__get__ (line 2756)ListType.value_field.__get__ (line 568)ListType.value_type.__get__ (line 581)ListViewArray.from_arrays (line 3003)ListViewArray.offsets.__get__ (line 3158)ListViewArray.sizes.__get__ (line 3188)ListViewArray.values.__get__ (line 3104)ListViewType.value_field.__get__ (line 654)ListViewType.value_type.__get__ (line 667)ListView requires DataType or Field
+        List of all columns in numerical order.
+
+        Returns
+        -------
+        columns : list of Array (for RecordBatch) or list of ChunkedArray (for Table)
+
+        Examples
+        --------
+        Table (works similarly for RecordBatch)
+
+        >>> import pyarrow as pa
+        >>> import pandas as pd
+        >>> df = pd.DataFrame({'n_legs': [None, 4, 5, None],
+        ...                    'animals': ["Flamingo", "Horse", None, "Centipede"]})
+        >>> table = pa.Table.from_pandas(df)
+        >>> table.columns
+        [<pyarrow.lib.ChunkedArray object at ...>
+        [
+          [
+            null,
+            4,
+            5,
+            null
+          ]
+        ], <pyarrow.lib.ChunkedArray object at ...>
+        [
+          [
+            "Flamingo",
+            "Horse",
+            null,
+            "Centipede"
+          ]
+        ]]
+        List requires DataType or Field
+        Lists all fields within the StructType.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> struct_type = pa.struct([('a', pa.int64()), ('b', pa.float64()), ('c', pa.string())])
+        >>> struct_type.fields
+        [pyarrow.Field<a: int64>, pyarrow.Field<b: double>, pyarrow.Field<c: string>]
+        
+        Lists the field names.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> struct_type = pa.struct([('a', pa.int64()), ('b', pa.float64()), ('c', pa.string())])
+        >>> struct_type.names
+        ['a', 'b', 'c']
+        
+        Make a new table by combining the chunks this table has.
+
+        All the underlying chunks in the ChunkedArray of each column are
+        concatenated into zero or one chunk.
+
+        To avoid buffer overflow, binary columns may be combined into
+        multiple chunks. Chunks will have the maximum possible length.
+
+        Parameters
+        ----------
+        memory_pool : MemoryPool, default None
+            For memory allocations, if required, otherwise use default pool.
+
+        Returns
+        -------
+        Table
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> n_legs = pa.chunked_array([[2, 2, 4], [4, 5, 100]])
+        >>> animals = pa.chunked_array([["Flamingo", "Parrot", "Dog"], ["Horse", "Brittle stars", "Centipede"]])
+        >>> names = ["n_legs", "animals"]
+        >>> table = pa.table([n_legs, animals], names=names)
+        >>> table
+        pyarrow.Table
+        n_legs: int64
+        animals: string
+        ----
+        n_legs: [[2,2,4],[4,5,100]]
+        animals: [["Flamingo","Parrot","Dog"],["Horse","Brittle stars","Centipede"]]
+        >>> table.combine_chunks()
+        pyarrow.Table
+        n_legs: int64
+        animals: string
+        ----
+        n_legs: [[2,2,4,4,5,100]]
+        animals: [["Flamingo","Parrot","Dog","Horse","Brittle stars","Centipede"]]
+        MapArray.from_arrays (line 3453)MapType.item_field.__get__ (line 777)MapType.item_type.__get__ (line 790)MapType.key_field.__get__ (line 751)MapType.key_type.__get__ (line 764)MapType.keys_sorted.__get__ (line 803)Map key field should be non-nullableMask is a different length from sequence being convertedMask must be 1D arrayMask must be a numpy array when converting numpy arraysMask must be a pyarrow.Array of type booleanMask must be boolean dtypeMask must not contain nullsMust pass a DictionaryType instanceMust pass decompressed_sizeMust pass either fields or type, not bothMust pass either names or fieldsMust pass either names or fields, not bothMust pass names or schema when constructing Table or RecordBatch.Must pass schema, or at least one RecordBatch
+        Names of the Table or RecordBatch columns.
+
+        Returns
+        -------
+        list of str
+
+        Examples
+        --------
+        Table (works similarly for RecordBatch)
+
+        >>> import pyarrow as pa
+        >>> table = pa.Table.from_arrays([[2, 4, 5, 100],
+        ...                               ["Flamingo", "Horse", "Brittle stars", "Centipede"]],
+        ...                               names=['n_legs', 'animals'])
+        >>> table.column_names
+        ['n_legs', 'animals']
+        
+        Names of this tensor dimensions.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> import numpy as np
+        >>> x = np.array([[2, 2, 4], [4, 5, 100]], np.int32)
+        >>> tensor = pa.Tensor.from_numpy(x, dim_names=["dim1","dim2"])
+        >>> tensor.dim_names
+        ['dim1', 'dim2']
+        Nanosecond duration Nanosecond resolution temporal type No type alias for Non-fixed width typeNoneNot a metadata version: Not an ArrowSchema objectNot an alignment: Note that Cython is deliberately stricter than PEP-484 and rejects subclasses of builtin types. If you need to pass subclasses then set the 'annotation_typing' directive to False.Null pointer (value before cast = 
+        Number of columns
+
+        Returns
+        -------
+        int
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> n_legs = pa.array([2, 2, 4, 4, 5, 100])
+        >>> animals = pa.array(["Flamingo", "Parrot", "Dog", "Horse", "Brittle stars", "Centipede"])
+        >>> batch = pa.RecordBatch.from_arrays([n_legs, animals],
+        ...                                     names=["n_legs", "animals"])
+        >>> batch.num_columns
+        2
+        
+        Number of columns in this table.
+
+        Returns
+        -------
+        int
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> import pandas as pd
+        >>> df = pd.DataFrame({'n_legs': [None, 4, 5, None],
+        ...                    'animals': ["Flamingo", "Horse", None, "Centipede"]})
+        >>> table = pa.Table.from_pandas(df)
+        >>> table.num_columns
+        2
+        
+        Number of data buffers required to construct Array type
+        excluding children.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> pa.int64().num_buffers
+        2
+        >>> pa.string().num_buffers
+        3
+        
+        Number of null entries
+
+        Returns
+        -------
+        int
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> n_legs = pa.chunked_array([[2, 2, 4], [4, None, 100]])
+        >>> n_legs.null_count
+        1
+        
+        Number of rows
+
+        Due to the definition of a RecordBatch, all columns have the same
+        number of rows.
+
+        Returns
+        -------
+        int
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> n_legs = pa.array([2, 2, 4, 4, 5, 100])
+        >>> animals = pa.array(["Flamingo", "Parrot", "Dog", "Horse", "Brittle stars", "Centipede"])
+        >>> batch = pa.RecordBatch.from_arrays([n_legs, animals],
+        ...                                     names=["n_legs", "animals"])
+        >>> batch.num_rows
+        6
+        
+        Number of rows in this table.
+
+        Due to the definition of a table, all columns have the same number of
+        rows.
+
+        Returns
+        -------
+        int
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> import pandas as pd
+        >>> df = pd.DataFrame({'n_legs': [None, 4, 5, None],
+        ...                    'animals': ["Flamingo", "Horse", None, "Centipede"]})
+        >>> table = pa.Table.from_pandas(df)
+        >>> table.num_rows
+        4
+        
+        Number of underlying chunks.
+
+        Returns
+        -------
+        int
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> n_legs = pa.chunked_array([[2, 2, None], [4, 5, 100]])
+        >>> n_legs.num_chunks
+        2
+        Offset must be non-negativeOnly extension types can be registeredOnly stream=None is supported.
+    Open memory map at file path. Size of the memory map cannot change.
+
+    Parameters
+    ----------
+    path : str
+    mode : {'r', 'r+', 'w'}, default 'r'
+        Whether the file is opened for reading ('r'), writing ('w')
+        or both ('r+').
+
+    Returns
+    -------
+    mmap : MemoryMappedFile
+
+    Examples
+    --------
+    Reading from a memory map without any memory allocation or copying:
+
+    >>> import pyarrow as pa
+    >>> with pa.output_stream('example_mmap.txt') as stream:
+    ...     stream.write(b'Constructing a buffer referencing the mapped memory')
+    ...
+    51
+    >>> with pa.memory_map('example_mmap.txt') as mmap:
+    ...     mmap.read_at(6,45)
+    ...
+    b'memory'
+    Operation on closed readerOperation on closed writer_PandasConvertible.to_pandas (line 866)Passing a pointer value as a float is unsafe and only supported for compatibility with older versions of the R Arrow library
+        Perform a join between this table and another one.
+
+        Result of the join will be a new Table, where further
+        operations can be applied.
+
+        Parameters
+        ----------
+        right_table : Table
+            The table to join to the current one, acting as the right table
+            in the join operation.
+        keys : str or list[str]
+            The columns from current table that should be used as keys
+            of the join operation left side.
+        right_keys : str or list[str], default None
+            The columns from the right_table that should be used as keys
+            on the join operation right side.
+            When ``None`` use the same key names as the left table.
+        join_type : str, default "left outer"
+            The kind of join that should be performed, one of
+            ("left semi", "right semi", "left anti", "right anti",
+            "inner", "left outer", "right outer", "full outer")
+        left_suffix : str, default None
+            Which suffix to add to left column names. This prevents confusion
+            when the columns in left and right tables have colliding names.
+        right_suffix : str, default None
+            Which suffix to add to the right column names. This prevents confusion
+            when the columns in left and right tables have colliding names.
+        coalesce_keys : bool, default True
+            If the duplicated keys should be omitted from one of the sides
+            in the join result.
+        use_threads : bool, default True
+            Whether to use multithreading or not.
+        filter_expression : pyarrow.compute.Expression
+            Residual filter which is applied to matching row.
+
+        Returns
+        -------
+        Table
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> import pyarrow as pa
+        >>> import pyarrow.compute as pc
+        >>> df1 = pd.DataFrame({'id': [1, 2, 3],
+        ...                     'year': [2020, 2022, 2019]})
+        >>> df2 = pd.DataFrame({'id': [3, 4],
+        ...                     'n_legs': [5, 100],
+        ...                     'animal': ["Brittle stars", "Centipede"]})
+        >>> t1 = pa.Table.from_pandas(df1)
+        >>> t2 = pa.Table.from_pandas(df2)
+
+        Left outer join:
+
+        >>> t1.join(t2, 'id').combine_chunks().sort_by('year')
+        pyarrow.Table
+        id: int64
+        year: int64
+        n_legs: int64
+        animal: string
+        ----
+        id: [[3,1,2]]
+        year: [[2019,2020,2022]]
+        n_legs: [[5,null,null]]
+        animal: [["Brittle stars",null,null]]
+
+        Full outer join:
+
+        >>> t1.join(t2, 'id', join_type="full outer").combine_chunks().sort_by('year')
+        pyarrow.Table
+        id: int64
+        year: int64
+        n_legs: int64
+        animal: string
+        ----
+        id: [[3,1,2,4]]
+        year: [[2019,2020,2022,null]]
+        n_legs: [[5,null,null,100]]
+        animal: [["Brittle stars",null,null,"Centipede"]]
+
+        Right outer join:
+
+        >>> t1.join(t2, 'id', join_type="right outer").combine_chunks().sort_by('year')
+        pyarrow.Table
+        year: int64
+        id: int64
+        n_legs: int64
+        animal: string
+        ----
+        year: [[2019,null]]
+        id: [[3,4]]
+        n_legs: [[5,100]]
+        animal: [["Brittle stars","Centipede"]]
+
+        Right anti join:
+
+        >>> t1.join(t2, 'id', join_type="right anti")
+        pyarrow.Table
+        id: int64
+        n_legs: int64
+        animal: string
+        ----
+        id: [[4]]
+        n_legs: [[100]]
+        animal: [["Centipede"]]
+
+        Inner join with intended mismatch filter expression:
+
+        >>> t1.join(t2, 'id', join_type="inner", filter_expression=pc.equal(pc.field("n_legs"), 100))
+        pyarrow.Table
+        id: int64
+        year: int64
+        n_legs: int64
+        animal: string
+        ----
+        id: []
+        year: []
+        n_legs: []
+        animal: []
+        
+        Perform an aggregation over the grouped columns of the table.
+
+        Parameters
+        ----------
+        aggregations : list[tuple(str, str)] or list[tuple(str, str, FunctionOptions)]
+            List of tuples, where each tuple is one aggregation specification
+            and consists of: aggregation column name followed
+            by function name and optionally aggregation function option.
+            Pass empty list to get a single row for each group.
+            The column name can be a string, an empty list or a list of
+            column names, for unary, nullary and n-ary aggregation functions
+            respectively.
+
+            For the list of function names and respective aggregation
+            function options see :ref:`py-grouped-aggrs`.
+
+        Returns
+        -------
+        Table
+            Results of the aggregation functions.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> t = pa.table([
+        ...       pa.array(["a", "a", "b", "b", "c"]),
+        ...       pa.array([1, 2, 3, 4, 5]),
+        ... ], names=["keys", "values"])
+
+        Sum the column "values" over the grouped column "keys":
+
+        >>> t.group_by("keys").aggregate([("values", "sum")])
+        pyarrow.Table
+        keys: string
+        values_sum: int64
+        ----
+        keys: [["a","b","c"]]
+        values_sum: [[3,7,5]]
+
+        Count the rows over the grouped column "keys":
+
+        >>> t.group_by("keys").aggregate([([], "count_all")])
+        pyarrow.Table
+        keys: string
+        count_all: int64
+        ----
+        keys: [["a","b","c"]]
+        count_all: [[2,2,1]]
+
+        Do multiple aggregations:
+
+        >>> t.group_by("keys").aggregate([
+        ...    ("values", "sum"),
+        ...    ("keys", "count")
+        ... ])
+        pyarrow.Table
+        keys: string
+        values_sum: int64
+        keys_count: int64
+        ----
+        keys: [["a","b","c"]]
+        values_sum: [[3,7,5]]
+        keys_count: [[2,2,1]]
+
+        Count the number of non-null values for column "values"
+        over the grouped column "keys":
+
+        >>> import pyarrow.compute as pc
+        >>> t.group_by(["keys"]).aggregate([
+        ...    ("values", "count", pc.CountOptions(mode="only_valid"))
+        ... ])
+        pyarrow.Table
+        keys: string
+        values_count: int64
+        ----
+        keys: [["a","b","c"]]
+        values_count: [[2,2,1]]
+
+        Get a single row for each group in column "keys":
+
+        >>> t.group_by("keys").aggregate([])
+        pyarrow.Table
+        keys: string
+        ----
+        keys: [["a","b","c"]]
+        
+        Perform an asof join between this table and another one.
+
+        This is similar to a left-join except that we match on nearest key rather
+        than equal keys. Both tables must be sorted by the key. This type of join
+        is most useful for time series data that are not perfectly aligned.
+
+        Optionally match on equivalent keys with "by" before searching with "on".
+
+        Result of the join will be a new Table, where further
+        operations can be applied.
+
+        Parameters
+        ----------
+        right_table : Table
+            The table to join to the current one, acting as the right table
+            in the join operation.
+        on : str
+            The column from current table that should be used as the "on" key
+            of the join operation left side.
+
+            An inexact match is used on the "on" key, i.e. a row is considered a
+            match if and only if ``right.on - left.on`` is in the range
+            ``[min(0, tolerance), max(0, tolerance)]``.
+
+            The input dataset must be sorted by the "on" key. Must be a single
+            field of a common type.
+
+            Currently, the "on" key must be an integer, date, or timestamp type.
+        by : str or list[str]
+            The columns from current table that should be used as the keys
+            of the join operation left side. The join operation is then done
+            only for the matches in these columns.
+        tolerance : int
+            The tolerance for inexact "on" key matching. A right row is considered
+            a match with a left row if ``right.on - left.on`` is in the range
+            ``[min(0, tolerance), max(0, tolerance)]``. ``tolerance`` may be:
+
+            - negative, in which case a past-as-of-join occurs
+              (match iff ``tolerance <= right.on - left.on <= 0``);
+            - or positive, in which case a future-as-of-join occurs
+              (match iff ``0 <= right.on - left.on <= tolerance``);
+            - or zero, in which case an exact-as-of-join occurs
+              (match iff ``right.on == left.on``).
+
+            The tolerance is interpreted in the same units as the "on" key.
+        right_on : str or list[str], default None
+            The columns from the right_table that should be used as the on key
+            on the join operation right side.
+            When ``None`` use the same key name as the left table.
+        right_by : str or list[str], default None
+            The columns from the right_table that should be used as keys
+            on the join operation right side.
+            When ``None`` use the same key names as the left table.
+
+        Returns
+        -------
+        Table
+
+        Example
+        --------
+        >>> import pyarrow as pa
+        >>> t1 = pa.table({'id': [1, 3, 2, 3, 3],
+        ...                'year': [2020, 2021, 2022, 2022, 2023]})
+        >>> t2 = pa.table({'id': [3, 4],
+        ...                'year': [2020, 2021],
+        ...                'n_legs': [5, 100],
+        ...                'animal': ["Brittle stars", "Centipede"]})
+
+        >>> t1.join_asof(t2, on='year', by='id', tolerance=-2)
+        pyarrow.Table
+        id: int64
+        year: int64
+        n_legs: int64
+        animal: string
+        ----
+        id: [[1,3,2,3,3]]
+        year: [[2020,2021,2022,2022,2023]]
+        n_legs: [[null,5,null,5,null]]
+        animal: [[null,"Brittle stars",null,"Brittle stars",null]]
+        Property `compression` must be None, str, or pyarrow.Codec
+        Provide an empty table according to the schema.
+
+        Returns
+        -------
+        table: pyarrow.Table
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> schema = pa.schema([
+        ...     pa.field('n_legs', pa.int64()),
+        ...     pa.field('animals', pa.string())])
+
+        Create an empty table with schema's fields:
+
+        >>> schema.empty_table()
+        pyarrow.Table
+        n_legs: int64
+        animals: string
+        ----
+        n_legs: [[]]
+        animals: [[]]
+        Received unsupported keyword argument(s): RecordBatch.add_column (line 2836)RecordBatch.cast (line 3301)RecordBatch.equals (line 3198)RecordBatch.from_arrays (line 3462)RecordBatch.from_pandas (line 3367)RecordBatch.from_struct_array (line 3561)RecordBatch.get_total_buffer_size (line 2805)RecordBatch.nbytes.__get__ (line 2770)RecordBatch.num_columns.__get__ (line 2682)RecordBatch.num_rows.__get__ (line 2703)RecordBatch.remove_column (line 2917)RecordBatch.rename_columns (line 3017)RecordBatch.replace_schema_metadata (line 2636)RecordBatch.schema.__get__ (line 2727)RecordBatch.select (line 3247)RecordBatch.serialize (line 3092)RecordBatch.set_column (line 2951)RecordBatch.slice (line 3141)RecordBatch.to_tensor (line 3612)RecordBatch with its custom metadata
+
+    Parameters
+    ----------
+    batch : RecordBatch
+    custom_metadata : KeyValueMetadata
+    
+    Register a Python extension type.
+
+    Registration is based on the extension name (so different registered types
+    need unique extension names). Registration needs an extension type
+    instance, but then works for any instance of the same subclass regardless
+    of parametrization of the type.
+
+    Parameters
+    ----------
+    ext_type : BaseExtensionType instance
+        The ExtensionType subclass to register.
+
+    Examples
+    --------
+    Define a RationalType extension type subclassing ExtensionType:
+
+    >>> import pyarrow as pa
+    >>> class RationalType(pa.ExtensionType):
+    ...     def __init__(self, data_type: pa.DataType):
+    ...         if not pa.types.is_integer(data_type):
+    ...             raise TypeError(f"data_type must be an integer type not {data_type}")
+    ...         super().__init__(
+    ...             pa.struct(
+    ...                 [
+    ...                     ("numer", data_type),
+    ...                     ("denom", data_type),
+    ...                 ],
+    ...             ),
+    ...             # N.B. This name does _not_ reference `data_type` so deserialization
+    ...             # will work for _any_ integer `data_type` after registration
+    ...             "my_package.rational",
+    ...         )
+    ...     def __arrow_ext_serialize__(self) -> bytes:
+    ...         # No parameters are necessary
+    ...         return b""
+    ...     @classmethod
+    ...     def __arrow_ext_deserialize__(cls, storage_type, serialized):
+    ...         # return an instance of this subclass
+    ...         return RationalType(storage_type[0].type)
+
+    Register the extension type:
+
+    >>> pa.register_extension_type(RationalType(pa.int64()))
+
+    Unregister the extension type:
+
+    >>> pa.unregister_extension_type("my_package.rational")
+    
+        Remove missing values from a chunked array.
+        See :func:`pyarrow.compute.drop_null` for full description.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> n_legs = pa.chunked_array([[2, 2, None], [4, 5, 100]])
+        >>> n_legs
+        <pyarrow.lib.ChunkedArray object at ...>
+        [
+          [
+            2,
+            2,
+            null
+          ],
+          [
+            4,
+            5,
+            100
+          ]
+        ]
+        >>> n_legs.drop_null()
+        <pyarrow.lib.ChunkedArray object at ...>
+        [
+          [
+            2,
+            2
+          ],
+          [
+            4,
+            5,
+            100
+          ]
+        ]
+        
+        Remove rows that contain missing values from a Table or RecordBatch.
+
+        See :func:`pyarrow.compute.drop_null` for full usage.
+
+        Returns
+        -------
+        Table or RecordBatch
+            A tabular object with the same schema, with rows containing
+            no missing values.
+
+        Examples
+        --------
+        Table (works similarly for RecordBatch)
+
+        >>> import pyarrow as pa
+        >>> import pandas as pd
+        >>> df = pd.DataFrame({'year': [None, 2022, 2019, 2021],
+        ...                   'n_legs': [2, 4, 5, 100],
+        ...                   'animals': ["Flamingo", "Horse", None, "Centipede"]})
+        >>> table = pa.Table.from_pandas(df)
+        >>> table.drop_null()
+        pyarrow.Table
+        year: double
+        n_legs: int64
+        animals: string
+        ----
+        year: [[2022,2021]]
+        n_legs: [[4,100]]
+        animals: [["Horse","Centipede"]]
+        
+        Remove the field at index i from the schema.
+
+        Parameters
+        ----------
+        i : int
+
+        Returns
+        -------
+        schema: Schema
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> schema = pa.schema([
+        ...     pa.field('n_legs', pa.int64()),
+        ...     pa.field('animals', pa.string())])
+
+        Remove the second field of the schema:
+
+        >>> schema.remove(1)
+        n_legs: int64
+        
+        Render a "pretty-printed" string representation of the ChunkedArray
+
+        Parameters
+        ----------
+        indent : int
+            How much to indent right the content of the array,
+            by default ``0``.
+        window : int
+            How many items to preview within each chunk at the begin and end
+            of the chunk when the chunk is bigger than the window.
+            The other elements will be ellipsed.
+        container_window : int
+            How many chunks to preview at the begin and end
+            of the array when the array is bigger than the window.
+            The other elements will be ellipsed.
+            This setting also applies to list columns.
+        skip_new_lines : bool
+            If the array should be rendered as a single line of text
+            or if each element should be on its own line.
+        element_size_limit : int, default 100
+            Maximum number of characters of a single element before it is truncated.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> n_legs = pa.chunked_array([[2, 2, 4], [4, 5, 100]])
+        >>> n_legs.to_string(skip_new_lines=True)
+        '[[2,2,4],[4,5,100]]'
+        
+        Replace a field at position i in the schema.
+
+        Parameters
+        ----------
+        i : int
+        field : Field
+
+        Returns
+        -------
+        schema: Schema
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> schema = pa.schema([
+        ...     pa.field('n_legs', pa.int64()),
+        ...     pa.field('animals', pa.string())])
+
+        Replace the second field of the schema with a new field 'extra':
+
+        >>> schema.set(1, pa.field('replaced', pa.bool_()))
+        n_legs: int64
+        replaced: bool
+        
+        Replace column in RecordBatch at position.
+
+        Parameters
+        ----------
+        i : int
+            Index to place the column at.
+        field_ : str or Field
+            If a string is passed then the type is deduced from the column
+            data.
+        column : Array or value coercible to array
+            Column data.
+
+        Returns
+        -------
+        RecordBatch
+            New record batch with the passed column set.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> import pandas as pd
+        >>> df = pd.DataFrame({'n_legs': [2, 4, 5, 100],
+        ...                    'animals': ["Flamingo", "Horse", "Brittle stars", "Centipede"]})
+        >>> batch = pa.RecordBatch.from_pandas(df)
+
+        Replace a column:
+
+        >>> year = [2021, 2022, 2019, 2021]
+        >>> batch.set_column(1,'year', year)
+        pyarrow.RecordBatch
+        n_legs: int64
+        year: int64
+        ----
+        n_legs: [2,4,5,100]
+        year: [2021,2022,2019,2021]
+        
+        Replace column in Table at position.
+
+        Parameters
+        ----------
+        i : int
+            Index to place the column at.
+        field_ : str or Field
+            If a string is passed then the type is deduced from the column
+            data.
+        column : Array, list of Array, or values coercible to arrays
+            Column data.
+
+        Returns
+        -------
+        Table
+            New table with the passed column set.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> import pandas as pd
+        >>> df = pd.DataFrame({'n_legs': [2, 4, 5, 100],
+        ...                    'animals': ["Flamingo", "Horse", "Brittle stars", "Centipede"]})
+        >>> table = pa.Table.from_pandas(df)
+
+        Replace a column:
+
+        >>> year = [2021, 2022, 2019, 2021]
+        >>> table.set_column(1,'year', [year])
+        pyarrow.Table
+        n_legs: int64
+        year: int64
+        ----
+        n_legs: [[2,4,5,100]]
+        year: [[2021,2022,2019,2021]]
+        
+        Replace each null element in values with fill_value.
+
+        See :func:`pyarrow.compute.fill_null` for full usage.
+
+        Parameters
+        ----------
+        fill_value : any
+            The replacement value for null entries.
+
+        Returns
+        -------
+        result : Array or ChunkedArray
+            A new array with nulls replaced by the given value.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> fill_value = pa.scalar(5, type=pa.int8())
+        >>> n_legs = pa.chunked_array([[2, 2, 4], [4, None, 100]])
+        >>> n_legs.fill_null(fill_value)
+        <pyarrow.lib.ChunkedArray object at ...>
+        [
+          [
+            2,
+            2,
+            4,
+            4,
+            5,
+            100
+          ]
+        ]
+        
+        Return a NumPy copy of this array (experimental).
+
+        Parameters
+        ----------
+        zero_copy_only : bool, default False
+            Introduced for signature consistence with pyarrow.Array.to_numpy.
+            This must be False here since NumPy arrays' buffer must be contiguous.
+
+        Returns
+        -------
+        array : numpy.ndarray
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> n_legs = pa.chunked_array([[2, 2, 4], [4, 5, 100]])
+        >>> n_legs.to_numpy()
+        array([  2,   2,   4,   4,   5, 100])
+        
+        Return a child field by its numeric index.
+
+        Parameters
+        ----------
+        i : int
+
+        Returns
+        -------
+        pyarrow.Field
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> union = pa.sparse_union([pa.field('a', pa.binary(10)), pa.field('b', pa.string())])
+        >>> union[0]
+        pyarrow.Field<a: fixed_size_binary[10]>
+        
+        Return array of same length as list child values array where each
+        output value is the index of the parent list array slot containing each
+        child value.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> arr = pa.array([[1, 2, 3], [], None, [4]],
+        ...                type=pa.list_(pa.int32()))
+        >>> arr.value_parent_indices()
+        <pyarrow.lib.Int64Array object at ...>
+        [
+          0,
+          0,
+          0,
+          3
+        ]
+        
+        Return boolean array indicating the null values.
+
+        Parameters
+        ----------
+        nan_is_null : bool (optional, default False)
+            Whether floating-point NaN values should also be considered null.
+
+        Returns
+        -------
+        array : boolean Array or ChunkedArray
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> n_legs = pa.chunked_array([[2, 2, 4], [4, None, 100]])
+        >>> n_legs.is_null()
+        <pyarrow.lib.ChunkedArray object at ...>
+        [
+          [
+            false,
+            false,
+            false,
+            false,
+            true,
+            false
+          ]
+        ]
+        
+        Return boolean array indicating the NaN values.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> import numpy as np
+        >>> arr = pa.chunked_array([[2, np.nan, 4], [4, None, 100]])
+        >>> arr.is_nan()
+        <pyarrow.lib.ChunkedArray object at ...>
+        [
+          [
+            false,
+            true,
+            false,
+            false,
+            null,
+            false
+          ]
+        ]
+        
+        Return boolean array indicating the non-null values.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> n_legs = pa.chunked_array([[2, 2, 4], [4, None, 100]])
+        >>> n_legs.is_valid()
+        <pyarrow.lib.ChunkedArray object at ...>
+        [
+          [
+            true,
+            true,
+            true
+          ],
+          [
+            true,
+            false,
+            true
+          ]
+        ]
+        
+        Return data type of a ChunkedArray.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> n_legs = pa.chunked_array([[2, 2, 4], [4, 5, 100]])
+        >>> n_legs.type
+        DataType(int64)
+        
+        Return deserialized-from-JSON pandas metadata field (if it exists)
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> import pandas as pd
+        >>> df = pd.DataFrame({'n_legs': [2, 4, 5, 100],
+        ...                    'animals': ["Flamingo", "Horse", "Brittle stars", "Centipede"]})
+        >>> schema = pa.Table.from_pandas(df).schema
+
+        Select pandas metadata field from Arrow Schema:
+
+        >>> schema.pandas_metadata
+        {'index_columns': [{'kind': 'range', 'name': None, 'start': 0, 'stop': 4, 'step': 1}], ...
+        
+        Return index of the unique field with the given name.
+
+        Parameters
+        ----------
+        name : str
+            The name of the field to look up.
+
+        Returns
+        -------
+        index : int
+            The index of the field with the given name; -1 if the
+            name isn't found or there are several fields with the given
+            name.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> struct_type = pa.struct({'x': pa.int32(), 'y': pa.string()})
+
+        Index of the field with a name 'y':
+
+        >>> struct_type.get_field_index('y')
+        1
+
+        Index of the field that does not exist:
+
+        >>> struct_type.get_field_index('z')
+        -1
+        
+        Return index of the unique field with the given name.
+
+        Parameters
+        ----------
+        name : str
+            The name of the field to look up.
+
+        Returns
+        -------
+        index : int
+            The index of the field with the given name; -1 if the
+            name isn't found or there are several fields with the given
+            name.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> schema = pa.schema([
+        ...     pa.field('n_legs', pa.int64()),
+        ...     pa.field('animals', pa.string())])
+
+        Get the index of the field named 'animals':
+
+        >>> schema.get_field_index("animals")
+        1
+
+        Index in case of several fields with the given name:
+
+        >>> schema = pa.schema([
+        ...     pa.field('n_legs', pa.int64()),
+        ...     pa.field('animals', pa.string()),
+        ...     pa.field('animals', pa.bool_())],
+        ...     metadata={"n_legs": "Number of legs per animal"})
+        >>> schema.get_field_index("animals")
+        -1
+        
+        Return integers array with values equal to the respective length of
+        each list element. Null list values are null in the output.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> arr = pa.array([[1, 2, 3], [], None, [4]],
+        ...                type=pa.list_(pa.int32()))
+        >>> arr.value_lengths()
+        <pyarrow.lib.Int32Array object at ...>
+        [
+          3,
+          0,
+          null,
+          1
+        ]
+        
+        Return length of a ChunkedArray.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> n_legs = pa.chunked_array([[2, 2, 4], [4, 5, 100]])
+        >>> n_legs.length()
+        6
+        
+        Return sorted list of indices for the fields with the given name.
+
+        Parameters
+        ----------
+        name : str
+            The name of the field to look up.
+
+        Returns
+        -------
+        indices : List[int]
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> struct_type = pa.struct({'x': pa.int32(), 'y': pa.string()})
+        >>> struct_type.get_all_field_indices('x')
+        [0]
+        
+        Return sorted list of indices for the fields with the given name.
+
+        Parameters
+        ----------
+        name : str
+            The name of the field to look up.
+
+        Returns
+        -------
+        indices : List[int]
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> schema = pa.schema([
+        ...     pa.field('n_legs', pa.int64()),
+        ...     pa.field('animals', pa.string()),
+        ...     pa.field('animals', pa.bool_())])
+
+        Get the indexes of the fields named 'animals':
+
+        >>> schema.get_all_field_indices("animals")
+        [1, 2]
+        
+        Return the equivalent NumPy / Pandas dtype.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> pa.int64().to_pandas_dtype()
+        <class 'numpy.int64'>
+        
+        Return the list offsets as an int32 array.
+
+        The returned array will not have a validity bitmap, so you cannot
+        expect to pass it to `ListArray.from_arrays` and get back the same
+        list array if the original one has nulls.
+
+        Returns
+        -------
+        offsets : Int32Array
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> array = pa.array([[1, 2], None, [3, 4, 5]])
+        >>> array.offsets
+        <pyarrow.lib.Int32Array object at ...>
+        [
+          0,
+          2,
+          2,
+          5
+        ]
+        
+        Return the list offsets as an int32 array.
+
+        The returned array will not have a validity bitmap, so you cannot
+        expect to pass it to `ListViewArray.from_arrays` and get back the same
+        list array if the original one has nulls.
+
+        Returns
+        -------
+        offsets : Int32Array
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> values = [1, 2, None, 3, 4]
+        >>> offsets = [0, 0, 1]
+        >>> sizes = [2, 0, 4]
+        >>> array = pa.ListViewArray.from_arrays(offsets, sizes, values)
+        >>> array.offsets
+        <pyarrow.lib.Int32Array object at ...>
+        [
+          0,
+          0,
+          1
+        ]
+        
+        Return the list sizes as an int32 array.
+
+        The returned array will not have a validity bitmap, so you cannot
+        expect to pass it to `ListViewArray.from_arrays` and get back the same
+        list array if the original one has nulls.
+
+        Returns
+        -------
+        sizes : Int32Array
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> values = [1, 2, None, 3, 4]
+        >>> offsets = [0, 0, 1]
+        >>> sizes = [2, 0, 4]
+        >>> array = pa.ListViewArray.from_arrays(offsets, sizes, values)
+        >>> array.sizes
+        <pyarrow.lib.Int32Array object at ...>
+        [
+          2,
+          0,
+          4
+        ]
+        
+        Return the list view offsets as an int64 array.
+
+        The returned array will not have a validity bitmap, so you cannot
+        expect to pass it to `LargeListViewArray.from_arrays` and get back the
+        same list array if the original one has nulls.
+
+        Returns
+        -------
+        offsets : Int64Array
+
+        Examples
+        --------
+
+        >>> import pyarrow as pa
+        >>> values = [1, 2, None, 3, 4]
+        >>> offsets = [0, 0, 1]
+        >>> sizes = [2, 0, 4]
+        >>> array = pa.LargeListViewArray.from_arrays(offsets, sizes, values)
+        >>> array.offsets
+        <pyarrow.lib.Int64Array object at ...>
+        [
+          0,
+          0,
+          1
+        ]
+        
+        Return the list view sizes as an int64 array.
+
+        The returned array will not have a validity bitmap, so you cannot
+        expect to pass it to `LargeListViewArray.from_arrays` and get back the
+        same list array if the original one has nulls.
+
+        Returns
+        -------
+        sizes : Int64Array
+
+        Examples
+        --------
+
+        >>> import pyarrow as pa
+        >>> values = [1, 2, None, 3, 4]
+        >>> offsets = [0, 0, 1]
+        >>> sizes = [2, 0, 4]
+        >>> array = pa.LargeListViewArray.from_arrays(offsets, sizes, values)
+        >>> array.sizes
+        <pyarrow.lib.Int64Array object at ...>
+        [
+          2,
+          0,
+          4
+        ]
+        
+    Return the process-global memory pool.
+
+    Examples
+    --------
+    >>> default_memory_pool()
+    <pyarrow.MemoryPool backend_name=... bytes_allocated=0 max_memory=...>
+    
+        Return the underlying array of values which backs the ListArray
+        ignoring the array's offset.
+
+        If any of the list elements are null, but are backed by a
+        non-empty sub-list, those elements will be included in the
+        output.
+
+        Compare with :meth:`flatten`, which returns only the non-null
+        values taking into consideration the array's offset.
+
+        Returns
+        -------
+        values : Array
+
+        See Also
+        --------
+        ListArray.flatten : ...
+
+        Examples
+        --------
+
+        The values include null elements from sub-lists:
+
+        >>> import pyarrow as pa
+        >>> array = pa.array([[1, 2], None, [3, 4, None, 6]])
+        >>> array.values
+        <pyarrow.lib.Int64Array object at ...>
+        [
+          1,
+          2,
+          3,
+          4,
+          null,
+          6
+        ]
+
+        If an array is sliced, the slice still uses the same
+        underlying data as the original array, just with an
+        offset. Since values ignores the offset, the values are the
+        same:
+
+        >>> sliced = array.slice(1, 2)
+        >>> sliced
+        <pyarrow.lib.ListArray object at ...>
+        [
+          null,
+          [
+            3,
+            4,
+            null,
+            6
+          ]
+        ]
+        >>> sliced.values
+        <pyarrow.lib.Int64Array object at ...>
+        [
+          1,
+          2,
+          3,
+          4,
+          null,
+          6
+        ]
+
+        
+        Return the underlying array of values which backs the LargeListArray
+        ignoring the array's offset.
+
+        If any of the list elements are null, but are backed by a
+        non-empty sub-list, those elements will be included in the
+        output.
+
+        Compare with :meth:`flatten`, which returns only the non-null
+        values taking into consideration the array's offset.
+
+        Returns
+        -------
+        values : Array
+
+        See Also
+        --------
+        LargeListArray.flatten : ...
+
+        Examples
+        --------
+
+        The values include null elements from the sub-lists:
+
+        >>> import pyarrow as pa
+        >>> array = pa.array(
+        ...     [[1, 2], None, [3, 4, None, 6]],
+        ...     type=pa.large_list(pa.int32()),
+        ... )
+        >>> array.values
+        <pyarrow.lib.Int32Array object at ...>
+        [
+          1,
+          2,
+          3,
+          4,
+          null,
+          6
+        ]
+
+        If an array is sliced, the slice still uses the same
+        underlying data as the original array, just with an
+        offset. Since values ignores the offset, the values are the
+        same:
+
+        >>> sliced = array.slice(1, 2)
+        >>> sliced
+        <pyarrow.lib.LargeListArray object at ...>
+        [
+          null,
+          [
+            3,
+            4,
+            null,
+            6
+          ]
+        ]
+        >>> sliced.values
+        <pyarrow.lib.Int32Array object at ...>
+        [
+          1,
+          2,
+          3,
+          4,
+          null,
+          6
+        ]
+        
+        Return the underlying array of values which backs the ListViewArray
+        ignoring the array's offset and sizes.
+
+        The values array may be out of order and/or contain additional values
+        that are not found in the logical representation of the array. The only
+        guarantee is that each non-null value in the ListView Array is contiguous.
+
+        Compare with :meth:`flatten`, which returns only the non-null
+        values taking into consideration the array's order and offset.
+
+        Returns
+        -------
+        values : Array
+
+        Examples
+        --------
+        The values include null elements from sub-lists:
+
+        >>> import pyarrow as pa
+        >>> values = [1, 2, None, 3, 4]
+        >>> offsets = [0, 0, 1]
+        >>> sizes = [2, 0, 4]
+        >>> array = pa.ListViewArray.from_arrays(offsets, sizes, values)
+        >>> array
+        <pyarrow.lib.ListViewArray object at ...>
+        [
+          [
+            1,
+            2
+          ],
+          [],
+          [
+            2,
+            null,
+            3,
+            4
+          ]
+        ]
+        >>> array.values
+        <pyarrow.lib.Int64Array object at ...>
+        [
+          1,
+          2,
+          null,
+          3,
+          4
+        ]
+        
+        Return the underlying array of values which backs the LargeListArray
+        ignoring the array's offset.
+
+        The values array may be out of order and/or contain additional values
+        that are not found in the logical representation of the array. The only
+        guarantee is that each non-null value in the ListView Array is contiguous.
+
+        Compare with :meth:`flatten`, which returns only the non-null
+        values taking into consideration the array's order and offset.
+
+        Returns
+        -------
+        values : Array
+
+        See Also
+        --------
+        LargeListArray.flatten : ...
+
+        Examples
+        --------
+
+        The values include null elements from sub-lists:
+
+        >>> import pyarrow as pa
+        >>> values = [1, 2, None, 3, 4]
+        >>> offsets = [0, 0, 1]
+        >>> sizes = [2, 0, 4]
+        >>> array = pa.LargeListViewArray.from_arrays(offsets, sizes, values)
+        >>> array
+        <pyarrow.lib.LargeListViewArray object at ...>
+        [
+          [
+            1,
+            2
+          ],
+          [],
+          [
+            2,
+            null,
+            3,
+            4
+          ]
+        ]
+        >>> array.values
+        <pyarrow.lib.Int64Array object at ...>
+        [
+          1,
+          2,
+          null,
+          3,
+          4
+        ]
+        
+        Return the underlying array of values which backs the
+        FixedSizeListArray ignoring the array's offset.
+
+        Note even null elements are included.
+
+        Compare with :meth:`flatten`, which returns only the non-null
+        sub-list values.
+
+        Returns
+        -------
+        values : Array
+
+        See Also
+        --------
+        FixedSizeListArray.flatten : ...
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> array = pa.array(
+        ...     [[1, 2], None, [3, None]],
+        ...     type=pa.list_(pa.int32(), 2)
+        ... )
+        >>> array.values
+        <pyarrow.lib.Int32Array object at ...>
+        [
+          1,
+          2,
+          null,
+          null,
+          3,
+          null
+        ]
+
+        
+        Return true if the tensors contains exactly equal data.
+
+        Parameters
+        ----------
+        other : Tensor
+            The other tensor to compare for equality.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> import numpy as np
+        >>> x = np.array([[2, 2, 4], [4, 5, 100]], np.int32)
+        >>> tensor = pa.Tensor.from_numpy(x, dim_names=["dim1","dim2"])
+        >>> y = np.array([[2, 2, 4], [4, 5, 10]], np.int32)
+        >>> tensor2 = pa.Tensor.from_numpy(y, dim_names=["a","b"])
+        >>> tensor.equals(tensor)
+        True
+        >>> tensor.equals(tensor2)
+        False
+        
+        Return true if type is equivalent to passed value.
+
+        Parameters
+        ----------
+        other : DataType or string convertible to DataType
+        check_metadata : bool
+            Whether nested Field metadata equality should be checked as well.
+
+        Returns
+        -------
+        is_equal : bool
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> pa.int64().equals(pa.string())
+        False
+        >>> pa.int64().equals(pa.int64())
+        True
+        
+        Return whether the contents of two chunked arrays are equal.
+
+        Parameters
+        ----------
+        other : pyarrow.ChunkedArray
+            Chunked array to compare against.
+
+        Returns
+        -------
+        are_equal : bool
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> n_legs = pa.chunked_array([[2, 2, 4], [4, 5, 100]])
+        >>> animals = pa.chunked_array((
+        ...             ["Flamingo", "Parrot", "Dog"],
+        ...             ["Horse", "Brittle stars", "Centipede"]
+        ...             ))
+        >>> n_legs.equals(n_legs)
+        True
+        >>> n_legs.equals(animals)
+        False
+        
+        Returns implied schema from dataframe
+
+        Parameters
+        ----------
+        df : pandas.DataFrame
+
+        preserve_index : bool, optional
+            Whether to store the index as an additional field in the resulting
+            ``Schema``. The default of None will store the index as a field,
+            except for RangeIndex which is stored as metadata only. Use
+            ``preserve_index=True`` to force it to be stored as a field.
+
+        Returns
+        -------
+        pyarrow.Schema
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> import pyarrow as pa
+        >>> df = pd.DataFrame({
+        ...     'int': [1, 2],
+        ...     'str': ['a', 'b']
+        ... })
+
+        Create an Arrow Schema from the schema of a pandas dataframe:
+
+        >>> pa.Schema.from_pandas(df)
+        int: int64
+        str: string
+        -- schema metadata --
+        pandas: '{"index_columns": [{"kind": "range", "name": null, ...
+        
+        Returns the name of the i-th tensor dimension.
+
+        Parameters
+        ----------
+        i : int
+            The physical index of the tensor dimension.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> import numpy as np
+        >>> x = np.array([[2, 2, 4], [4, 5, 100]], np.int32)
+        >>> tensor = pa.Tensor.from_numpy(x, dim_names=["dim1","dim2"])
+        >>> tensor.dim_name(0)
+        'dim1'
+        >>> tensor.dim_name(1)
+        'dim2'
+        RunEndEncodedType expects None as validity bitmap, buffers[0] is not NoneRunEndEncodedType's expected null_count (0) did not match passed number (RunEndEncodedType's expected number of children (RunEndEncodedType's expected number of buffers (Scalar data type was NULLScalar type not supportedScalar was NULLSchema and number of arrays unequalSchema.append (line 3309)Schema.empty_table (line 3044)Schema.equals (line 3072)Schema.field (line 3157)Schema field name corresponds to more than one fieldSchema.from_pandas (line 3111)Schema.get_all_field_indices (line 3281)Schema.get_field_index (line 3241)Schema.insert (line 3348)Schema.metadata.__get__ (line 3010)Schema must be an instance of pyarrow.SchemaSchema.names.__get__ (line 2959)
+        Schema of the RecordBatch and its columns
+
+        Returns
+        -------
+        pyarrow.Schema
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> n_legs = pa.array([2, 2, 4, 4, 5, 100])
+        >>> animals = pa.array(["Flamingo", "Parrot", "Dog", "Horse", "Brittle stars", "Centipede"])
+        >>> batch = pa.RecordBatch.from_arrays([n_legs, animals],
+        ...                                     names=["n_legs", "animals"])
+        >>> batch.schema
+        n_legs: int64
+        animals: string
+        
+        Schema of the table and its columns.
+
+        Returns
+        -------
+        Schema
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> import pandas as pd
+        >>> df = pd.DataFrame({'n_legs': [2, 4, 5, 100],
+        ...                    'animals': ["Flamingo", "Horse", "Brittle stars", "Centipede"]})
+        >>> table = pa.Table.from_pandas(df)
+        >>> table.schema
+        n_legs: int64
+        animals: string
+        -- schema metadata --
+        pandas: '{"index_columns": [{"kind": "range", "name": null, "start": 0, "' ...
+        Schema.pandas_metadata.__get__ (line 2933)Schema passed to names= option, please pass schema= explicitly. Will raise exception in futureSchema.remove (line 3386)Schema.remove_metadata (line 3537)Schema.serialize (line 3503)Schema.set (line 3417)Schema.types.__get__ (line 2987)Schema.with_metadata (line 3467)
+        Select a chunk by its index.
+
+        Parameters
+        ----------
+        i : int
+
+        Returns
+        -------
+        pyarrow.Array
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> n_legs = pa.chunked_array([[2, 2, None], [4, 5, 100]])
+        >>> n_legs.chunk(1)
+        <pyarrow.lib.Int64Array object at ...>
+        [
+          4,
+          5,
+          100
+        ]
+        
+        Select a field by its column name or numeric index.
+
+        Parameters
+        ----------
+        i : int or str
+
+        Returns
+        -------
+        pyarrow.Field
+
+        Examples
+        --------
+
+        >>> import pyarrow as pa
+        >>> struct_type = pa.struct({'x': pa.int32(), 'y': pa.string()})
+
+        Select the second field:
+
+        >>> struct_type.field(1)
+        pyarrow.Field<y: string>
+
+        Select the field named 'x':
+
+        >>> struct_type.field('x')
+        pyarrow.Field<x: int32>
+        
+        Select a field by its column name or numeric index.
+
+        Parameters
+        ----------
+        i : int or string
+
+        Returns
+        -------
+        pyarrow.Field
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> schema = pa.schema([
+        ...     pa.field('n_legs', pa.int64()),
+        ...     pa.field('animals', pa.string())])
+
+        Select the second field:
+
+        >>> schema.field(1)
+        pyarrow.Field<animals: string>
+
+        Select the field of the column named 'n_legs':
+
+        >>> schema.field('n_legs')
+        pyarrow.Field<n_legs: int64>
+        
+        Select a schema field by its column name or numeric index.
+
+        Parameters
+        ----------
+        i : int or string
+            The index or name of the field to retrieve.
+
+        Returns
+        -------
+        Field
+
+        Examples
+        --------
+        Table (works similarly for RecordBatch)
+
+        >>> import pyarrow as pa
+        >>> import pandas as pd
+        >>> df = pd.DataFrame({'n_legs': [2, 4, 5, 100],
+        ...                    'animals': ["Flamingo", "Horse", "Brittle stars", "Centipede"]})
+        >>> table = pa.Table.from_pandas(df)
+        >>> table.field(0)
+        pyarrow.Field<n_legs: int64>
+        >>> table.field(1)
+        pyarrow.Field<animals: string>
+        
+        Select columns of the RecordBatch.
+
+        Returns a new RecordBatch with the specified columns, and metadata
+        preserved.
+
+        Parameters
+        ----------
+        columns : list-like
+            The column names or integer indices to select.
+
+        Returns
+        -------
+        RecordBatch
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> n_legs = pa.array([2, 2, 4, 4, 5, 100])
+        >>> animals = pa.array(["Flamingo", "Parrot", "Dog", "Horse", "Brittle stars", "Centipede"])
+        >>> batch = pa.record_batch([n_legs, animals],
+        ...                          names=["n_legs", "animals"])
+
+        Select columns my indices:
+
+        >>> batch.select([1])
+        pyarrow.RecordBatch
+        animals: string
+        ----
+        animals: ["Flamingo","Parrot","Dog","Horse","Brittle stars","Centipede"]
+
+        Select columns by names:
+
+        >>> batch.select(["n_legs"])
+        pyarrow.RecordBatch
+        n_legs: int64
+        ----
+        n_legs: [2,2,4,4,5,100]
+        
+        Select columns of the Table.
+
+        Returns a new Table with the specified columns, and metadata
+        preserved.
+
+        Parameters
+        ----------
+        columns : list-like
+            The column names or integer indices to select.
+
+        Returns
+        -------
+        Table
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> import pandas as pd
+        >>> df = pd.DataFrame({'year': [2020, 2022, 2019, 2021],
+        ...                    'n_legs': [2, 4, 5, 100],
+        ...                    'animals': ["Flamingo", "Horse", "Brittle stars", "Centipede"]})
+        >>> table = pa.Table.from_pandas(df)
+        >>> table.select([0,1])
+        pyarrow.Table
+        year: int64
+        n_legs: int64
+        ----
+        year: [[2020,2022,2019,2021]]
+        n_legs: [[2,4,5,100]]
+        >>> table.select(["year"])
+        pyarrow.Table
+        year: int64
+        ----
+        year: [[2020,2022,2019,2021]]
+        
+        Select rows from a Table or RecordBatch.
+
+        See :func:`pyarrow.compute.take` for full usage.
+
+        Parameters
+        ----------
+        indices : Array or array-like
+            The indices in the tabular object whose rows will be returned.
+
+        Returns
+        -------
+        Table or RecordBatch
+            A tabular object with the same schema, containing the taken rows.
+
+        Examples
+        --------
+        Table (works similarly for RecordBatch)
+
+        >>> import pyarrow as pa
+        >>> import pandas as pd
+        >>> df = pd.DataFrame({'year': [2020, 2022, 2019, 2021],
+        ...                    'n_legs': [2, 4, 5, 100],
+        ...                    'animals': ["Flamingo", "Horse", "Brittle stars", "Centipede"]})
+        >>> table = pa.Table.from_pandas(df)
+        >>> table.take([1,3])
+        pyarrow.Table
+        year: int64
+        n_legs: int64
+        animals: string
+        ----
+        year: [[2022,2021]]
+        n_legs: [[4,100]]
+        animals: [["Horse","Centipede"]]
+        
+        Select rows from the table or record batch based on a boolean mask.
+
+        The Table can be filtered based on a mask, which will be passed to
+        :func:`pyarrow.compute.filter` to perform the filtering, or it can
+        be filtered through a boolean :class:`.Expression`
+
+        Parameters
+        ----------
+        mask : Array or array-like or .Expression
+            The boolean mask or the :class:`.Expression` to filter the table with.
+        null_selection_behavior : str, default "drop"
+            How nulls in the mask should be handled, does nothing if
+            an :class:`.Expression` is used.
+
+        Returns
+        -------
+        filtered : Table or RecordBatch
+            A tabular object of the same schema, with only the rows selected
+            by applied filtering
+
+        Examples
+        --------
+        Using a Table (works similarly for RecordBatch):
+
+        >>> import pyarrow as pa
+        >>> table = pa.table({'year': [2020, 2022, 2019, 2021],
+        ...                   'n_legs': [2, 4, 5, 100],
+        ...                   'animals': ["Flamingo", "Horse", "Brittle stars", "Centipede"]})
+
+        Define an expression and select rows:
+
+        >>> import pyarrow.compute as pc
+        >>> expr = pc.field("year") <= 2020
+        >>> table.filter(expr)
+        pyarrow.Table
+        year: int64
+        n_legs: int64
+        animals: string
+        ----
+        year: [[2020,2019]]
+        n_legs: [[2,5]]
+        animals: [["Flamingo","Brittle stars"]]
+
+        Define a mask and select rows:
+
+        >>> mask=[True, True, False, None]
+        >>> table.filter(mask)
+        pyarrow.Table
+        year: int64
+        n_legs: int64
+        animals: string
+        ----
+        year: [[2020,2022]]
+        n_legs: [[2,4]]
+        animals: [["Flamingo","Horse"]]
+        >>> table.filter(mask, null_selection_behavior='emit_null')
+        pyarrow.Table
+        year: int64
+        n_legs: int64
+        animals: string
+        ----
+        year: [[2020,2022,null]]
+        n_legs: [[2,4,null]]
+        animals: [["Flamingo","Horse",null]]
+        
+        Select single column from Table or RecordBatch.
+
+        Parameters
+        ----------
+        i : int or string
+            The index or name of the column to retrieve.
+
+        Returns
+        -------
+        column : Array (for RecordBatch) or ChunkedArray (for Table)
+
+        Examples
+        --------
+        Table (works similarly for RecordBatch)
+
+        >>> import pyarrow as pa
+        >>> import pandas as pd
+        >>> df = pd.DataFrame({'n_legs': [2, 4, 5, 100],
+        ...                    'animals': ["Flamingo", "Horse", "Brittle stars", "Centipede"]})
+        >>> table = pa.Table.from_pandas(df)
+
+        Select a column by numeric index:
+
+        >>> table.column(0)
+        <pyarrow.lib.ChunkedArray object at ...>
+        [
+          [
+            2,
+            4,
+            5,
+            100
+          ]
+        ]
+
+        Select a column by its name:
+
+        >>> table.column("animals")
+        <pyarrow.lib.ChunkedArray object at ...>
+        [
+          [
+            "Flamingo",
+            "Horse",
+            "Brittle stars",
+            "Centipede"
+          ]
+        ]
+        
+        Select values from the chunked array.
+
+        See :func:`pyarrow.compute.filter` for full usage.
+
+        Parameters
+        ----------
+        mask : Array or array-like
+            The boolean mask to filter the chunked array with.
+        null_selection_behavior : str, default "drop"
+            How nulls in the mask should be handled.
+
+        Returns
+        -------
+        filtered : Array or ChunkedArray
+            An array of the same type, with only the elements selected by
+            the boolean mask.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> n_legs = pa.chunked_array([[2, 2, 4], [4, 5, 100]])
+        >>> n_legs
+        <pyarrow.lib.ChunkedArray object at ...>
+        [
+          [
+            2,
+            2,
+            4
+          ],
+          [
+            4,
+            5,
+            100
+          ]
+        ]
+        >>> mask = pa.array([True, False, None, True, False, True])
+        >>> n_legs.filter(mask)
+        <pyarrow.lib.ChunkedArray object at ...>
+        [
+          [
+            2
+          ],
+          [
+            4,
+            100
+          ]
+        ]
+        >>> n_legs.filter(mask, null_selection_behavior="emit_null")
+        <pyarrow.lib.ChunkedArray object at ...>
+        [
+          [
+            2,
+            null
+          ],
+          [
+            4,
+            100
+          ]
+        ]
+        
+        Select values from the chunked array.
+
+        See :func:`pyarrow.compute.take` for full usage.
+
+        Parameters
+        ----------
+        indices : Array or array-like
+            The indices in the array whose values will be returned.
+
+        Returns
+        -------
+        taken : Array or ChunkedArray
+            An array with the same datatype, containing the taken values.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> n_legs = pa.chunked_array([[2, 2, 4], [4, 5, 100]])
+        >>> n_legs
+        <pyarrow.lib.ChunkedArray object at ...>
+        [
+          [
+            2,
+            2,
+            4
+          ],
+          [
+            4,
+            5,
+            100
+          ]
+        ]
+        >>> n_legs.take([1,4,5])
+        <pyarrow.lib.ChunkedArray object at ...>
+        [
+          [
+            2,
+            5,
+            100
+          ]
+        ]
+        Should specify one of list_size and type
+        Should the entries be sorted according to keys.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> pa.map_(pa.string(), pa.int32(), keys_sorted=True).keys_sorted
+        True
+        
+        Sort the Table or RecordBatch by one or multiple columns.
+
+        Parameters
+        ----------
+        sorting : str or list[tuple(name, order)]
+            Name of the column to use to sort (ascending), or
+            a list of multiple sorting conditions where
+            each entry is a tuple with column name
+            and sorting order ("ascending" or "descending")
+        **kwargs : dict, optional
+            Additional sorting options.
+            As allowed by :class:`SortOptions`
+
+        Returns
+        -------
+        Table or RecordBatch
+            A new tabular object sorted according to the sort keys.
+
+        Examples
+        --------
+        Table (works similarly for RecordBatch)
+
+        >>> import pandas as pd
+        >>> import pyarrow as pa
+        >>> df = pd.DataFrame({'year': [2020, 2022, 2021, 2022, 2019, 2021],
+        ...                    'n_legs': [2, 2, 4, 4, 5, 100],
+        ...                    'animal': ["Flamingo", "Parrot", "Dog", "Horse",
+        ...                    "Brittle stars", "Centipede"]})
+        >>> table = pa.Table.from_pandas(df)
+        >>> table.sort_by('animal')
+        pyarrow.Table
+        year: int64
+        n_legs: int64
+        animal: string
+        ----
+        year: [[2019,2021,2021,2020,2022,2022]]
+        n_legs: [[5,100,4,2,4,2]]
+        animal: [["Brittle stars","Centipede","Dog","Flamingo","Horse","Parrot"]]
+        SparseCOOTensor was NULLSparseCSCMatrix was NULLSparseCSFTensor was NULLSparseCSRMatrix was NULL
+        Strides of this tensor.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> import numpy as np
+        >>> x = np.array([[2, 2, 4], [4, 5, 100]], np.int32)
+        >>> tensor = pa.Tensor.from_numpy(x, dim_names=["dim1","dim2"])
+        >>> tensor.strides
+        (12, 4)
+        StringBuilder only accepts string objectsStringViewBuilder only accepts string objectsStructType.field (line 979)StructType.fields.__get__ (line 1074)StructType.get_all_field_indices (line 1014)StructType.get_field_index (line 946)StructType.names.__get__ (line 1060)Struct field name corresponds to more than one fieldTableGroupBy.aggregate (line 6512)Table.add_column (line 5338)Table.cast (line 4670)Table.combine_chunks (line 4511)Table.equals (line 4621)Table.flatten (line 4445)Table.from_arrays (line 4813)Table.from_batches (line 4972)Table.from_pandas (line 4733)Table.from_struct_array (line 4916)Table.get_total_buffer_size (line 5307)Table.group_by (line 5597)Table.join_asof (line 5775)Table.join (line 5640)Table.nbytes.__get__ (line 5272)Table.num_columns.__get__ (line 5227)Table.num_rows.__get__ (line 5248)Table.remove_column (line 5412)Table.rename_columns (line 5505)Table.replace_schema_metadata (line 4382)Table.schema.__get__ (line 5184)Table.select (line 4331)Table.set_column (line 5446)Table.slice (line 4266)Table.to_batches (line 5045)Table.to_reader (line 5115)Table.unify_dictionaries (line 4562)_Tabular.append_column (line 2456)_Tabular.column (line 1747)_Tabular.column_names.__get__ (line 1798)_Tabular.columns.__get__ (line 1820)_Tabular.drop_columns (line 2389)_Tabular.drop_null (line 1859)_Tabular.field (line 1894)_Tabular.filter (line 2202)_Tabular.from_pydict (line 1923)_Tabular.from_pylist (line 1990)_Tabular.itercolumns (line 2054)_Tabular.shape.__get__ (line 2088)_Tabular.sort_by (line 2112)_Tabular.take (line 2163)_Tabular.to_pydict (line 2275)_Tabular.to_pylist (line 2315)Target schema's field names are not matching the record batch's field names: Target schema's field names are not matching the table's field names: Tensor.dim_name (line 148)Tensor.dim_names.__get__ (line 170)Tensor.equals (line 118)Tensor.from_numpy (line 61)Tensor.is_contiguous.__get__ (line 202)Tensor.is_mutable.__get__ (line 186)Tensor.ndim.__get__ (line 218)Tensor.shape.__get__ (line 250)Tensor.size.__get__ (line 234)Tensor.strides.__get__ (line 267)Tensor.to_numpy (line 96)Tensor was NULL
+        Test if this field is equal to the other
+
+        Parameters
+        ----------
+        other : pyarrow.Field
+        check_metadata : bool, default False
+            Whether Field metadata equality should be checked as well.
+
+        Returns
+        -------
+        is_equal : bool
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> f1 = pa.field('key', pa.int32())
+        >>> f2 = pa.field('key', pa.int32(), nullable=False)
+        >>> f1.equals(f2)
+        False
+        >>> f1.equals(f1)
+        True
+        
+        Test if this schema is equal to the other
+
+        Parameters
+        ----------
+        other :  pyarrow.Schema
+        check_metadata : bool, default False
+            Key/value metadata must be equal too
+
+        Returns
+        -------
+        is_equal : bool
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> schema1 = pa.schema([
+        ...     pa.field('n_legs', pa.int64()),
+        ...     pa.field('animals', pa.string())],
+        ...     metadata={"n_legs": "Number of legs per animal"})
+        >>> schema2 = pa.schema([
+        ...     ('some_int', pa.int32()),
+        ...     ('some_string', pa.string())
+        ... ])
+
+        Test two equal schemas:
+
+        >>> schema1.equals(schema1)
+        True
+
+        Test two unequal schemas:
+
+        >>> schema1.equals(schema2)
+        False
+        The Array passed as dictionary must have identical type to the dictionary type's value_typeThe Scalar value passed as index must have identical type to the dictionary type's index_typeThe 'add_metadata' method is deprecated, use 'with_metadata' insteadThe column must be allocated on the same device as the RecordBatch. Got column on device 
+        The data type of dictionary indices (a signed integer type).
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> pa.dictionary(pa.int16(), pa.utf8()).index_type
+        DataType(int16)
+        
+        The data type of items in the map entries.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> pa.map_(pa.string(), pa.int32()).item_type
+        DataType(int32)
+        
+        The data type of keys in the map entries.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> pa.map_(pa.string(), pa.int32()).key_type
+        DataType(string)
+        
+        The data type of large list values.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> pa.large_list(pa.string()).value_type
+        DataType(string)
+        
+        The data type of large list values.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> pa.list_(pa.int32(), 2).value_type
+        DataType(int32)
+        
+        The data type of large list view values.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> pa.large_list_view(pa.string()).value_type
+        DataType(string)
+        
+        The data type of list values.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> pa.list_(pa.string()).value_type
+        DataType(string)
+        
+        The data type of list view values.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> pa.list_view(pa.string()).value_type
+        DataType(string)
+        
+        The decimal precision, in number of decimal digits (an integer).
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> t = pa.decimal32(5, 2)
+        >>> t.precision
+        5
+        
+        The decimal precision, in number of decimal digits (an integer).
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> t = pa.decimal64(5, 2)
+        >>> t.precision
+        5
+        
+        The decimal precision, in number of decimal digits (an integer).
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> t = pa.decimal128(5, 2)
+        >>> t.precision
+        5
+        
+        The decimal precision, in number of decimal digits (an integer).
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> t = pa.decimal256(76, 38)
+        >>> t.precision
+        76
+        
+        The decimal scale (an integer).
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> t = pa.decimal32(5, 2)
+        >>> t.scale
+        2
+        
+        The decimal scale (an integer).
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> t = pa.decimal64(5, 2)
+        >>> t.scale
+        2
+        
+        The decimal scale (an integer).
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> t = pa.decimal128(5, 2)
+        >>> t.scale
+        2
+        
+        The decimal scale (an integer).
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> t = pa.decimal256(76, 38)
+        >>> t.scale
+        38
+        The dictionary index type should be integer.
+        The dictionary value type.
+
+        The dictionary values are found in an instance of DictionaryArray.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> pa.dictionary(pa.int16(), pa.utf8()).value_type
+        DataType(string)
+        
+        The dimension (n) of this tensor.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> import numpy as np
+        >>> x = np.array([[2, 2, 4], [4, 5, 100]], np.int32)
+        >>> tensor = pa.Tensor.from_numpy(x, dim_names=["dim1","dim2"])
+        >>> tensor.ndim
+        2
+        The dtype of the 'categories' of the passed categorical values (
+        The duration unit ('s', 'ms', 'us' or 'ns').
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> t = pa.duration('s')
+        >>> t.unit
+        's'
+        The 'field_by_name' method is deprecated, use 'field' instead
+        The field for items in the map entries.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> pa.map_(pa.string(), pa.int32()).item_field
+        pyarrow.Field<value: int32>
+        
+        The field for keys in the map entries.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> pa.map_(pa.string(), pa.int32()).key_field
+        pyarrow.Field<key: string not null>
+        
+        The field for large list view values.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> pa.large_list_view(pa.string()).value_field
+        pyarrow.Field<item: string>
+        
+        The field for list values.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> pa.list_(pa.string()).value_field
+        pyarrow.Field<item: string>
+        
+        The field for list values.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> pa.list_(pa.int32(), 2).value_field
+        pyarrow.Field<item: int32>
+        
+        The field for list view values.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> pa.list_view(pa.string()).value_field
+        pyarrow.Field<item: string>
+        
+        The field metadata (if any is set).
+
+        Returns
+        -------
+        metadata : dict or None
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> field = pa.field('key', pa.int32(),
+        ...                  metadata={"key": "Something important"})
+        >>> field.metadata
+        {b'key': b'Something important'}
+        
+        The field name.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> field = pa.field('key', pa.int32())
+        >>> field.name
+        'key'
+        
+        The field nullability.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> f1 = pa.field('key', pa.int32())
+        >>> f2 = pa.field('key', pa.int32(), nullable=False)
+        >>> f1.nullable
+        True
+        >>> f2.nullable
+        False
+        The length of dim_names (
+        The mode of the union ("dense" or "sparse").
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> union = pa.sparse_union([pa.field('a', pa.binary(10)), pa.field('b', pa.string())])
+        >>> union.mode
+        'sparse'
+        The 'names' and 'metadata' arguments are not valid when passing a pandas DataFrameThe 'names' and 'metadata' arguments are not valid when using Arrow PyCapsule InterfaceThe 'names' argument is not valid when passing a dictionary
+        The number of child fields.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> pa.int64()
+        DataType(int64)
+        >>> pa.int64().num_fields
+        0
+        >>> pa.list_(pa.string())
+        ListType(list<item: string>)
+        >>> pa.list_(pa.string()).num_fields
+        1
+        >>> struct = pa.struct({'x': pa.int32(), 'y': pa.string()})
+        >>> struct.num_fields
+        2
+        The object's __arrow_array__ method does not return a pyarrow Array or ChunkedArray.The 'ordered' flag of the passed categorical values does not match the 'ordered' of the specified type. The passed mapping doesn't contain the following field(s) of the schema: {}The run_end_type should be 'int16', 'int32', or 'int64'
+        The schema's field names.
+
+        Returns
+        -------
+        list of str
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> schema = pa.schema([
+        ...     pa.field('n_legs', pa.int64()),
+        ...     pa.field('animals', pa.string())])
+
+        Get the names of the schema's fields:
+
+        >>> schema.names
+        ['n_legs', 'animals']
+        
+        The schema's field types.
+
+        Returns
+        -------
+        list of DataType
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> schema = pa.schema([
+        ...     pa.field('n_legs', pa.int64()),
+        ...     pa.field('animals', pa.string())])
+
+        Get the types of the schema's fields:
+
+        >>> schema.types
+        [DataType(int64), DataType(string)]
+        
+        The schema's metadata (if any is set).
+
+        Returns
+        -------
+        metadata: dict or None
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> schema = pa.schema([
+        ...     pa.field('n_legs', pa.int64()),
+        ...     pa.field('animals', pa.string())],
+        ...     metadata={"n_legs": "Number of legs per animal"})
+
+        Get the metadata of the schema's fields:
+
+        >>> schema.metadata
+        {b'n_legs': b'Number of legs per animal'}
+        
+        The shape of this tensor.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> import numpy as np
+        >>> x = np.array([[2, 2, 4], [4, 5, 100]], np.int32)
+        >>> tensor = pa.Tensor.from_numpy(x, dim_names=["dim1","dim2"])
+        >>> tensor.shape
+        (2, 3)
+        
+        The size of the fixed size lists.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> pa.list_(pa.int32(), 2).list_size
+        2
+        
+        The size of this tensor.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> import numpy as np
+        >>> x = np.array([[2, 2, 4], [4, 5, 100]], np.int32)
+        >>> tensor = pa.Tensor.from_numpy(x, dim_names=["dim1","dim2"])
+        >>> tensor.size
+        6
+        
+        The sum of bytes in each buffer referenced by the chunked array.
+
+        An array may only reference a portion of a buffer.
+        This method will overestimate in this case and return the
+        byte size of the entire buffer.
+
+        If a buffer is referenced multiple times then it will
+        only be counted once.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> n_legs = pa.chunked_array([[2, 2, 4], [4, None, 100]])
+        >>> n_legs.get_total_buffer_size()
+        49
+        
+        The sum of bytes in each buffer referenced by the record batch
+
+        An array may only reference a portion of a buffer.
+        This method will overestimate in this case and return the
+        byte size of the entire buffer.
+
+        If a buffer is referenced multiple times then it will
+        only be counted once.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> n_legs = pa.array([2, 2, 4, 4, 5, 100])
+        >>> animals = pa.array(["Flamingo", "Parrot", "Dog", "Horse", "Brittle stars", "Centipede"])
+        >>> batch = pa.RecordBatch.from_arrays([n_legs, animals],
+        ...                                     names=["n_legs", "animals"])
+        >>> batch.get_total_buffer_size()
+        120
+        
+        The sum of bytes in each buffer referenced by the table.
+
+        An array may only reference a portion of a buffer.
+        This method will overestimate in this case and return the
+        byte size of the entire buffer.
+
+        If a buffer is referenced multiple times then it will
+        only be counted once.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> import pandas as pd
+        >>> df = pd.DataFrame({'n_legs': [None, 4, 5, None],
+        ...                    'animals': ["Flamingo", "Horse", None, "Centipede"]})
+        >>> table = pa.Table.from_pandas(df)
+        >>> table.get_total_buffer_size()
+        76
+        
+        The time unit ('s' or 'ms').
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> t = pa.time32('ms')
+        >>> t.unit
+        'ms'
+        
+        The time unit ('us' or 'ns').
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> t = pa.time64('us')
+        >>> t.unit
+        'us'
+        
+        The timestamp time zone, if any, or None.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> t = pa.timestamp('s', tz='UTC')
+        >>> t.tz
+        'UTC'
+        
+        The timestamp unit ('s', 'ms', 'us' or 'ns').
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> t = pa.timestamp('us')
+        >>> t.unit
+        'us'
+        
+        The type code to indicate each data type in this union.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> union = pa.sparse_union([pa.field('a', pa.binary(10)), pa.field('b', pa.string())])
+        >>> union.type_codes
+        [0, 1]
+        This object's internal pointer is NULL, do not use any methods or attributes on this objectTime32Type.unit.__get__ (line 1323)Time64Type.unit.__get__ (line 1358)TimestampType.tz.__get__ (line 1282)TimestampType.unit.__get__ (line 1268)
+        Total number of bytes consumed by the elements of the chunked array.
+
+        In other words, the sum of bytes from all buffer ranges referenced.
+
+        Unlike `get_total_buffer_size` this method will account for array
+        offsets.
+
+        If buffers are shared between arrays then the shared
+        portion will only be counted multiple times.
+
+        The dictionary of dictionary arrays will always be counted in their
+        entirety even if the array only references a portion of the dictionary.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> n_legs = pa.chunked_array([[2, 2, 4], [4, None, 100]])
+        >>> n_legs.nbytes
+        49
+        
+        Total number of bytes consumed by the elements of the record batch.
+
+        In other words, the sum of bytes from all buffer ranges referenced.
+
+        Unlike `get_total_buffer_size` this method will account for array
+        offsets.
+
+        If buffers are shared between arrays then the shared
+        portion will only be counted multiple times.
+
+        The dictionary of dictionary arrays will always be counted in their
+        entirety even if the array only references a portion of the dictionary.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> n_legs = pa.array([2, 2, 4, 4, 5, 100])
+        >>> animals = pa.array(["Flamingo", "Parrot", "Dog", "Horse", "Brittle stars", "Centipede"])
+        >>> batch = pa.RecordBatch.from_arrays([n_legs, animals],
+        ...                                     names=["n_legs", "animals"])
+        >>> batch.nbytes
+        116
+        
+        Total number of bytes consumed by the elements of the table.
+
+        In other words, the sum of bytes from all buffer ranges referenced.
+
+        Unlike `get_total_buffer_size` this method will account for array
+        offsets.
+
+        If buffers are shared between arrays then the shared
+        portion will only be counted multiple times.
+
+        The dictionary of dictionary arrays will always be counted in their
+        entirety even if the array only references a portion of the dictionary.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> import pandas as pd
+        >>> df = pd.DataFrame({'n_legs': [None, 4, 5, None],
+        ...                    'animals': ["Flamingo", "Horse", None, "Centipede"]})
+        >>> table = pa.Table.from_pandas(df)
+        >>> table.nbytes
+        72
+        Trying to import data on a CUDA device, but PyArrow is not built with CUDA support.
+(importing 'pyarrow.cuda' resulted in "Type's expected number of buffers is at least Type's expected number of buffers (Type's expected number of children (Unable to avoid a copy while creating a numpy array as requested.
+If using `np.array(obj, copy=False)` replace it with `np.asarray(obj)` to allow a copy when neededUnable to avoid a copy while creating a numpy array as requested (converting a pyarrow.ChunkedArray always results in a copy).
+If using `np.array(obj, copy=False)` replace it with `np.asarray(obj)` to allow a copy when neededUnable to avoid a copy while creating a numpy array as requested (converting a pyarrow.Unable to read message from object with type: Unable to wrap Datum in a Python objectUnable to write to object of type: 
+        Unify dictionaries across all chunks.
+
+        This method returns an equivalent chunked array, but where all
+        chunks share the same dictionary values.  Dictionary indices are
+        transposed accordingly.
+
+        If there are no dictionaries in the chunked array, it is returned
+        unchanged.
+
+        Parameters
+        ----------
+        memory_pool : MemoryPool, default None
+            For memory allocations, if required, otherwise use default pool
+
+        Returns
+        -------
+        result : ChunkedArray
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> arr_1 = pa.array(["Flamingo", "Parrot", "Dog"]).dictionary_encode()
+        >>> arr_2 = pa.array(["Horse", "Brittle stars", "Centipede"]).dictionary_encode()
+        >>> c_arr = pa.chunked_array([arr_1, arr_2])
+        >>> c_arr
+        <pyarrow.lib.ChunkedArray object at ...>
+        [
+        ...
+          -- dictionary:
+            [
+              "Flamingo",
+              "Parrot",
+              "Dog"
+            ]
+          -- indices:
+            [
+              0,
+              1,
+              2
+            ],
+        ...
+          -- dictionary:
+            [
+              "Horse",
+              "Brittle stars",
+              "Centipede"
+            ]
+          -- indices:
+            [
+              0,
+              1,
+              2
+            ]
+        ]
+        >>> c_arr.unify_dictionaries()
+        <pyarrow.lib.ChunkedArray object at ...>
+        [
+        ...
+          -- dictionary:
+            [
+              "Flamingo",
+              "Parrot",
+              "Dog",
+              "Horse",
+              "Brittle stars",
+              "Centipede"
+            ]
+          -- indices:
+            [
+              0,
+              1,
+              2
+            ],
+        ...
+          -- dictionary:
+            [
+              "Flamingo",
+              "Parrot",
+              "Dog",
+              "Horse",
+              "Brittle stars",
+              "Centipede"
+            ]
+          -- indices:
+            [
+              3,
+              4,
+              5
+            ]
+        ]
+        
+        Unify dictionaries across all chunks.
+
+        This method returns an equivalent table, but where all chunks of
+        each column share the same dictionary values.  Dictionary indices
+        are transposed accordingly.
+
+        Columns without dictionaries are returned unchanged.
+
+        Parameters
+        ----------
+        memory_pool : MemoryPool, default None
+            For memory allocations, if required, otherwise use default pool
+
+        Returns
+        -------
+        Table
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> arr_1 = pa.array(["Flamingo", "Parrot", "Dog"]).dictionary_encode()
+        >>> arr_2 = pa.array(["Horse", "Brittle stars", "Centipede"]).dictionary_encode()
+        >>> c_arr = pa.chunked_array([arr_1, arr_2])
+        >>> table = pa.table([c_arr], names=["animals"])
+        >>> table
+        pyarrow.Table
+        animals: dictionary<values=string, indices=int32, ordered=0>
+        ----
+        animals: [  -- dictionary:
+        ["Flamingo","Parrot","Dog"]  -- indices:
+        [0,1,2],  -- dictionary:
+        ["Horse","Brittle stars","Centipede"]  -- indices:
+        [0,1,2]]
+
+        Unify dictionaries across both chunks:
+
+        >>> table.unify_dictionaries()
+        pyarrow.Table
+        animals: dictionary<values=string, indices=int32, ordered=0>
+        ----
+        animals: [  -- dictionary:
+        ["Flamingo","Parrot","Dog","Horse","Brittle stars","Centipede"]  -- indices:
+        [0,1,2],  -- dictionary:
+        ["Flamingo","Parrot","Dog","Horse","Brittle stars","Centipede"]  -- indices:
+        [3,4,5]]
+        UnionArray does not have child UnionType.field (line 1169)UnionType.mode.__get__ (line 1121)UnionType.type_codes.__get__ (line 1141)
+        Unnest this [Large]ListArray/[Large]ListViewArray/FixedSizeListArray
+        according to 'recursive'.
+
+        Note that this method is different from ``self.values`` in that
+        it takes care of the slicing offset as well as null elements backed
+        by non-empty sub-lists.
+
+        Parameters
+        ----------
+        recursive : bool, default False, optional
+            When True, flatten this logical list-array recursively until an
+            array of non-list values is formed.
+
+            When False, flatten only the top level.
+
+        Returns
+        -------
+        result : Array
+
+        Examples
+        --------
+
+        Basic logical list-array's flatten
+        >>> import pyarrow as pa
+        >>> values = [1, 2, 3, 4]
+        >>> offsets = [2, 1, 0]
+        >>> sizes = [2, 2, 2]
+        >>> array = pa.ListViewArray.from_arrays(offsets, sizes, values)
+        >>> array
+        <pyarrow.lib.ListViewArray object at ...>
+        [
+          [
+            3,
+            4
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+        >>> array.flatten()
+        <pyarrow.lib.Int64Array object at ...>
+        [
+          3,
+          4,
+          2,
+          3,
+          1,
+          2
+        ]
+
+        When recursive=True, nested list arrays are flattened recursively
+        until an array of non-list values is formed.
+
+        >>> array = pa.array([
+        ...    None,
+        ...    [
+        ...        [1, None, 2],
+        ...        None,
+        ...        [3, 4]
+        ...    ],
+        ...    [],
+        ...    [
+        ...        [],
+        ...        [5, 6],
+        ...        None
+        ...    ],
+        ...    [
+        ...        [7, 8]
+        ...    ]
+        ... ], type=pa.list_(pa.list_(pa.int64())))
+        >>> array.flatten(True)
+        <pyarrow.lib.Int64Array object at ...>
+        [
+          1,
+          null,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ]
+        
+    Unregister a Python extension type.
+
+    Parameters
+    ----------
+    type_name : str
+        The name of the ExtensionType subclass to unregister.
+
+    Examples
+    --------
+    Define a RationalType extension type subclassing ExtensionType:
+
+    >>> import pyarrow as pa
+    >>> class RationalType(pa.ExtensionType):
+    ...     def __init__(self, data_type: pa.DataType):
+    ...         if not pa.types.is_integer(data_type):
+    ...             raise TypeError(f"data_type must be an integer type not {data_type}")
+    ...         super().__init__(
+    ...             pa.struct(
+    ...                 [
+    ...                     ("numer", data_type),
+    ...                     ("denom", data_type),
+    ...                 ],
+    ...             ),
+    ...             # N.B. This name does _not_ reference `data_type` so deserialization
+    ...             # will work for _any_ integer `data_type` after registration
+    ...             "my_package.rational",
+    ...         )
+    ...     def __arrow_ext_serialize__(self) -> bytes:
+    ...         # No parameters are necessary
+    ...         return b""
+    ...     @classmethod
+    ...     def __arrow_ext_deserialize__(cls, storage_type, serialized):
+    ...         # return an instance of this subclass
+    ...         return RationalType(storage_type[0].type)
+
+    Register the extension type:
+
+    >>> pa.register_extension_type(RationalType(pa.int64()))
+
+    Unregister the extension type:
+
+    >>> pa.unregister_extension_type("my_package.rational")
+    
+        Whether the dictionary is ordered, i.e. whether the ordering of values
+        in the dictionary is important.
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> pa.dictionary(pa.int64(), pa.utf8()).ordered
+        False
+        Wrapping scalar of type Writable buffer requested but Arrow buffer was not mutable
+        Write RecordBatch to Buffer as encapsulated IPC message, which does not
+        include a Schema.
+
+        To reconstruct a RecordBatch from the encapsulated IPC message Buffer
+        returned by this function, a Schema must be passed separately. See
+        Examples.
+
+        Parameters
+        ----------
+        memory_pool : MemoryPool, default None
+            Uses default memory pool if not specified
+
+        Returns
+        -------
+        serialized : Buffer
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> n_legs = pa.array([2, 2, 4, 4, 5, 100])
+        >>> animals = pa.array(["Flamingo", "Parrot", "Dog", "Horse", "Brittle stars", "Centipede"])
+        >>> batch = pa.RecordBatch.from_arrays([n_legs, animals],
+        ...                                     names=["n_legs", "animals"])
+        >>> buf = batch.serialize()
+        >>> buf
+        <pyarrow.Buffer address=0x... size=... is_cpu=True is_mutable=True>
+
+        Reconstruct RecordBatch from IPC message Buffer and original Schema
+
+        >>> pa.ipc.read_record_batch(buf, batch.schema)
+        pyarrow.RecordBatch
+        n_legs: int64
+        animals: string
+        ----
+        n_legs: [2,2,4,4,5,100]
+        animals: ["Flamingo","Parrot","Dog","Horse","Brittle stars","Centipede"]
+        
+        Write Schema to Buffer as encapsulated IPC message
+
+        Parameters
+        ----------
+        memory_pool : MemoryPool, default None
+            Uses default memory pool if not specified
+
+        Returns
+        -------
+        serialized : Buffer
+
+        Examples
+        --------
+        >>> import pyarrow as pa
+        >>> schema = pa.schema([
+        ...     pa.field('n_legs', pa.int64()),
+        ...     pa.field('animals', pa.string())])
+
+        Write schema to Buffer:
+
+        >>> schema.serialize()
+        <pyarrow.Buffer address=0x... size=... is_cpu=True is_mutable=True>
+        %Y-%m-%dT%H:%M:%S%z: ').'.).
+----..., ")."  ?<>)'(add_note address= always results in a copy).
+If using `np.array(obj, copy=False)` replace it with `np.asarray(obj)` to allow a copy when needed and array (line 129)arrow.ArrayStatistics<null_count= backend_name=binary file expected, got text filebinary (line 4784)binary_view (line 4921)
+body length: bool8 (line 5660)bool_ (line 3880), but expected , but the passed number is  bytes bytes_allocated=.bz2cannot specify 'type' when creating a Field from an ArrowSchemachild is deprecated, use fieldchunked_array (line 1475) closed=compression=" compression_level=concat_arrays (line 4970)concat_batches (line 6327)concat_tables (line 6247)could not infer open mode for file-like object create_memory_map (line 1152)date32[day]date32 (line 4408)date64 (line 4429)date64[ms]datetime64[ms]datetime64[ns]datetime64[s]datetime64[us]decimal128 (line 4648)decimal32 (line 4538)decimal64 (line 4593)default_memory_pool (line 146)dictionary (line 5225)) did not match the passed number (dim_names must be a tuple or listdisable, distinct_count= does not exist in schema" does not exist in schema) does not match length of arrays () does not match the specified type () does not matchthe number of tensor dimensions (duration (line 4337)duration[ms]duration[ns]duration[s]duration[us] emit_dictionary_deltas=enable ensure_alignment=" exists : expected field (line 3761)field or tuple expected, got Nonefixed_shape_tensor (line 5559)float16 (line 4450)float32 (line 4484)float64 (line 4511) for extension type .from_*` functions instead.from_numpy_dtype (line 5948)gc, got got null buffer.gz included_fields= incompatible with bool8 storageindex out of boundsinput_stream (line 2738) insteadint16 (line 3984)int32 (line 4038)int64 (line 4092)int8 (line 3930) is a directory is_cpu= is installed is installed. Therefore, pandas-specific integration is not used., is_max_exact=, is_min_exact= is_mutable= is not safely convertible to microseconds to convert to datetime.datetime. Install pandas to return as Timestamp with nanosecond support or access the .value attribute. is not safely convertible to microseconds to convert to datetime.timedelta. Install pandas to return as Timedelta with nanosecond support or access the .value attribute. is_readable= is_seekable= is_writable=isenabledjson_ (line 5506)large_binary (line 4836)large_list (line 5017)large_list_view (line 5112)large_string (line 4864)large_utf8 (line 4894)left outerlist_ (line 4951)list_size should be a positive integerlist_view (line 5074).lz4map_ (line 5150)mask not implemented with Arrow array inputs yet, max='max_chunksize' should be strictly positive max_memory=memory_map (line 1111)
+metadata length:  metadata_version=, min=month_day_nano_interval (line 4387) name=names must be a list or dict not no default __reduce__ due to non-trivial __cinit__ not found not supported for buffer protocol np.arrays for SparseCSFTensor.indptr np.arrays for SparseCSFTensor.indicesnull (line 3858)nulls (line 408)only slices with step 1 supportedonly valid on readable filesonly valid on seekable filesonly valid on writable filesopaque (line 5703) out of rangeoutput_stream (line 2824) own_file=pa.input_stream() called with instance of 'pa.output_stream() called with instance of ', please pass it explicitlyprecision should be between 1 and 9precision should be between 1 and 18precision should be between 1 and 38precision should be between 1 and 76promote has been superseded by promote_options='default'.pyarrow.<pyarrow.<pyarrow.Device: pyarrow.Field<<pyarrow.MemoryManager device: pyarrow.Message
+type: pyarrow.Message(uninitialized)<pyarrow.SparseCOOTensor>
+type: {self.type}
+shape: {self.shape}<pyarrow.SparseCSCMatrix>
+type: <pyarrow.SparseCSFTensor>
+type: <pyarrow.SparseCSRMatrix>
+type: <pyarrow.Tensor>
+type: pyarrow/array.pxipyarrow/benchmark.pxipyarrow/builder.pxipyarrow/compat.pxipyarrow/config.pxipyarrow/device.pxipyarrow/error.pxipyarrow/io.pxi<pyarrow.ipc.IpcReadOptions ensure_native_endian=<pyarrow.ipc.IpcWriteOptions allow_64bit=pyarrow/ipc.pxipyarrow.libpyarrow/lib.pyxpyarrow/memory.pxipyarrow/pandas-shim.pxipyarrow requires pandas 1.0.0 or above, pandas pyarrow/scalar.pxipyarrow/table.pxipyarrow/tensor.pxipyarrow/types.pxipyarrow.unknownr+r+brb+readable file expectedrecord_batch (line 5908)register_extension_type (line 2169)repeat (line 458)'s constructor directly's constructor directly, use one of the `pyarrow.Array.from_*` functions instead.'s constructor directly, use one of the `'s constructor directly, use one of the RecordBatchReader.from_* functions instead.'s constructor directly, use pa.scalar() instead.'s constructor directly, use public functions like pyarrow.int64, pyarrow.list_, etc. instead.'s constructor directly, use pyarrow.*_memory_pool instead.'s constructor directly, use pyarrow.logging_memory_pool instead.'s constructor directly, use pyarrow.proxy_memory_pool instead.'s constructor directly, use `pyarrow.ipc.read_message` function instead.'s constructor directly, use `pyarrow.ipc.MessageReader.open_stream` function instead.scalar (line 1601)schema (line 5855)self.c_options cannot be converted to a Python object for picklingself.device cannot be converted to a Python object for picklingself.logging_pool,self.pool cannot be converted to a Python object for picklingself.memory_manager cannot be converted to a Python object for picklingself.pool cannot be converted to a Python object for picklingself.pool,self.proxy_pool cannot be converted to a Python object for picklingself.reader cannot be converted to a Python object for picklingself.sp_sparse_tensor,self.stp cannot be converted to a Python object for picklingself.sp_statistics cannot be converted to a Python object for picklingself.sp_tensor,self.tp cannot be converted to a Python object for picklingself.stop_token cannot be converted to a Python object for picklingself.wrapped cannot be converted to a Python object for picklingself.writer cannot be converted to a Python object for pickling
+shape:  size=
+strides: string (line 4734)string_view (line 4936)<stringsource>struct (line 5284)table (line 6085)time32 (line 4251)time32[ms]time32[s]time64 (line 4294)time64[ns]time64[us]timedelta64[ms]timedelta64[ns]timedelta64[s]timedelta64[us] times in schematimestamp (line 4192)timestamp[ms]timestamp[ns]timestamp[s]timestamp[us]' to pointer address to requested schema  to requested type type type_codes should have the same length as fieldsuint16 (line 3957)uint32 (line 4011)uint64 (line 4065)uint8 (line 3903) unify_dictionaries=unregister_extension_type (line 2233) use_legacy_format= use_threads=use_threads=utf8 (line 4759)utf-8 vs ' which was already encountered. with null values to non-nullablewritable file expectedzero_copy_only must be False for pyarrow.ChunkedArray.to_numpy.zstAlignmentAnyArrayArrayStatisticsArrayStatistics.__reduce_cython__ArrayStatistics.__setstate_cython__Array.__array__Array.__arrow_c_array__Array.__arrow_c_device_array__Array.__dlpack__Array.__dlpack_device__Array.__iter__Array.__reduce__Array.__sizeof__Array._debug_printArray._export_to_cArray._export_to_c_deviceArray._import_from_cArray._import_from_c_capsuleArray._import_from_c_deviceArray._import_from_c_device_capsuleArray._to_pandasArray.buffersArray.castArray.copy_toArray.dictionary_encodeArray.diffArray.drop_nullArray.equalsArray.fill_nullArray.filterArray.from_buffersArray.from_pandasArray.get_total_buffer_sizeArray.indexArray.is_nanArray.is_nullArray.is_validArray.sliceArray.sortArray.sumArray.takeArray.to_numpyArray.to_pylistArray.to_stringArray.tolistArray.uniqueArray.validateArray.value_countsArray.viewArrowCancelledArrowCancelled.__init__ArrowCapacityErrorArrowExceptionArrowIOErrorArrowIndexErrorArrowInvalidArrowKeyErrorArrowKeyError.__str__ArrowMemoryErrorArrowNotImplementedErrorArrowSerializationErrorArrowTypeErrorAt64ByteBROTLIBZ2BaseExtensionTypeBaseExtensionType.__arrow_ext_class__BaseExtensionType.__arrow_ext_scalar_class__BaseExtensionType.wrap_arrayBaseListArrayBaseListArray.flattenBaseListArray.value_lengthsBaseListArray.value_parent_indicesBinaryArrayBinaryScalarBinaryScalar.__bytes__BinaryScalar.as_bufferBinaryScalar.as_pyBinaryViewArrayBinaryViewScalarBool8ArrayBool8Array.from_numpyBool8Array.from_storageBool8Array.to_numpyBool8ScalarBool8Scalar.as_pyBool8TypeBool8Type.__arrow_ext_class__Bool8Type.__arrow_ext_scalar_class__Bool8Type.__reduce__BooleanArrayBooleanScalarBooleanScalar.as_pyBufferBufferOutputStreamBufferOutputStream.__reduce_cython__BufferOutputStream.__setstate_cython__BufferOutputStream.getvalueBufferReaderBufferReader.__reduce_cython__BufferReader.__setstate_cython__Buffer.__reduce_ex__Buffer._assert_cpuBuffer.equalsBuffer.hexBuffer.sliceBuffer.to_pybytesBufferedIOBaseBufferedInputStreamBufferedInputStream.__reduce_cython__BufferedInputStream.__setstate_cython__BufferedInputStream.detachBufferedOutputStreamBufferedOutputStream.__reduce_cython__BufferedOutputStream.__setstate_cython__BufferedOutputStream.detachBuildInfoCCOOCPU_CRecordBatchWriter_CRecordBatchWriter.__enter___CRecordBatchWriter.__exit___CRecordBatchWriter.__reduce_cython___CRecordBatchWriter.__setstate_cython___CRecordBatchWriter.close_CRecordBatchWriter.write_CRecordBatchWriter.write_batch_CRecordBatchWriter.write_tableCUDACUDA_HOSTCUDA_MANAGEDCacheOptionsCacheOptions.__reduce__CacheOptions._reconstructCacheOptions.from_network_metricsCategoricalChunkedArrayChunkedArray.__array__ChunkedArray.__arrow_c_stream__ChunkedArray.__iter__ChunkedArray.__reduce__ChunkedArray.__sizeof__ChunkedArray._assert_cpuChunkedArray._import_from_c_capsuleChunkedArray._to_pandasChunkedArray.castChunkedArray.chunkChunkedArray.combine_chunksChunkedArray.dictionary_encodeChunkedArray.drop_nullChunkedArray.equalsChunkedArray.fill_nullChunkedArray.filterChunkedArray.flattenChunkedArray.formatChunkedArray.get_total_buffer_sizeChunkedArray.indexChunkedArray.is_nanChunkedArray.is_nullChunkedArray.is_validChunkedArray.iterchunksChunkedArray.lengthChunkedArray.sliceChunkedArray.sortChunkedArray.takeChunkedArray.to_numpyChunkedArray.to_pylistChunkedArray.to_stringChunkedArray.unify_dictionariesChunkedArray.uniqueChunkedArray.validateChunkedArray.value_countsCodecCodec.__reduce_cython__Codec.__setstate_cython__Codec.compressCodec.decompressCodec.default_compression_levelCodec.detectCodec.is_availableCodec.maximum_compression_levelCodec.minimum_compression_levelCodec.supports_compression_levelCompressedInputStreamCompressedInputStream.__reduce_cython__CompressedInputStream.__setstate_cython__CompressedOutputStreamCompressedOutputStream.__reduce_cython__CompressedOutputStream.__setstate_cython__CppBuildInfoDEFAULT_BUFFER_SIZEDataFrameDataTypeDataTypeSpecificDataType.__arrow_c_schema__DataType.__reduce__DataType._export_to_cDataType._import_from_cDataType._import_from_c_capsuleDataType.equalsDataType.fieldDataType.to_pandas_dtypeDate32ArrayDate32ScalarDate32Scalar.as_pyDate64ArrayDate64ScalarDate64Scalar.as_pyDatetimeTZDtypeDecima32ArrayDecimalDecimal128ArrayDecimal128ScalarDecimal128Scalar.as_pyDecimal128TypeDecimal128Type.__reduce__Decimal256ArrayDecimal256ScalarDecimal256Scalar.as_pyDecimal256TypeDecimal256Type.__reduce__Decimal32ArrayDecimal32ScalarDecimal32Scalar.as_pyDecimal32TypeDecimal32Type.__reduce__Decimal64ArrayDecimal64ScalarDecimal64Scalar.as_pyDecimal64TypeDecimal64Type.__reduce__DenseUnionTypeDeviceDeviceAllocationTypeDevice.__reduce_cython__Device.__setstate_cython__DictionaryArrayDictionaryArray.dictionary_decodeDictionaryArray.dictionary_encodeDictionaryArray.from_arraysDictionaryArray.from_buffersDictionaryEncodeOptionsDictionaryMemoDictionaryMemo.__reduce_cython__DictionaryMemo.__setstate_cython__DictionaryScalarDictionaryScalar.__reduce__DictionaryScalar._reconstructDictionaryScalar.as_pyDictionaryTypeDictionaryType.__reduce__DoubleArrayDoubleScalarDoubleScalar.as_pyDurationArrayDurationScalarDurationScalar.as_pyDurationTypeEXT_DEVEmptyExpressionExtensionArrayExtensionArray.from_storageExtensionDtype_ExtensionRegistryNanny_ExtensionRegistryNanny.__reduce_cython___ExtensionRegistryNanny.__setstate_cython___ExtensionRegistryNanny.release_registryExtensionScalarExtensionScalar.as_pyExtensionScalar.from_storageExtensionTypeExtensionType.__arrow_ext_class__ExtensionType.__arrow_ext_deserialize__ExtensionType.__arrow_ext_scalar_class__ExtensionType.__arrow_ext_serialize__ExtensionType.__reduce__FalseFieldField.__arrow_c_schema__Field.__reduce__Field._export_to_cField._import_from_cField._import_from_c_capsuleField.equalsField.flattenField.remove_metadataField.with_metadataField.with_nameField.with_nullableField.with_typeFixedShapeTensorArrayFixedShapeTensorArray.from_numpy_ndarrayFixedShapeTensorArray.to_numpy_ndarrayFixedShapeTensorArray.to_tensorFixedShapeTensorScalarFixedShapeTensorScalar.to_numpyFixedShapeTensorScalar.to_tensorFixedShapeTensorTypeFixedShapeTensorType.__arrow_ext_class__FixedShapeTensorType.__arrow_ext_scalar_class__FixedShapeTensorType.__reduce__FixedSizeBinaryArrayFixedSizeBinaryScalarFixedSizeBinaryTypeFixedSizeBinaryType.__reduce__FixedSizeBufferWriterFixedSizeBufferWriter.__reduce_cython__FixedSizeBufferWriter.__setstate_cython__FixedSizeBufferWriter.set_memcopy_threadsFixedSizeBufferWriter.set_memcopy_blocksizeFixedSizeBufferWriter.set_memcopy_thresholdFixedSizeListArrayFixedSizeListArray.from_arraysFixedSizeListScalarFixedSizeListTypeFixedSizeListType.__reduce__FloatArrayFloatScalarFloatScalar.as_pyFloatingPointArrayGZIPHEXAGONHalfFloatArrayHalfFloatScalarHalfFloatScalar.as_pyIOBaseIndexInt16ArrayInt16ScalarInt16Scalar.as_pyInt32ArrayInt32ScalarInt32Scalar.as_pyInt64ArrayInt64ScalarInt64Scalar.as_pyInt8ArrayInt8ScalarInt8Scalar.as_pyIntEnumIntFlagIntegerArrayIntervalDtypeIpcReadOptionsIpcReadOptions.__reduce_cython__IpcReadOptions.__setstate_cython__IpcWriteOptionsIpcWriteOptions.__reduce_cython__IpcWriteOptions.__setstate_cython__JsonArrayJsonScalarJsonTypeJsonType.__arrow_ext_class__JsonType.__arrow_ext_scalar_class__JsonType.__reduce__KKeyValueMetadataKeyValueMetadata.__reduce__KeyValueMetadata.equalsKeyValueMetadata.get_allKeyValueMetadata.itemsKeyValueMetadata.keyKeyValueMetadata.keysKeyValueMetadata.to_dictKeyValueMetadata.valueKeyValueMetadata.valuesLZ4LZ4_FRAMELZ4_RAWLargeBinaryArrayLargeBinaryScalarLargeListArrayLargeListArray.from_arraysLargeListScalarLargeListTypeLargeListType.__reduce__LargeListViewArrayLargeListViewArray.from_arraysLargeListViewScalarLargeListViewTypeLargeListViewType.__reduce__LargeStringArrayLargeStringArray.from_buffersLargeStringScalarListArrayListArray.from_arraysListFlattenOptionsListScalarListScalar.as_pyListTypeListType.__reduce__ListViewArrayListViewArray.from_arraysListViewScalarListViewTypeListViewType.__reduce__LockLoggingMemoryPoolLoggingMemoryPool.__reduce_cython__LoggingMemoryPool.__setstate_cython__MMETALMapArrayMapArray.from_arraysMapScalarMapScalar.__iter__MapScalar.as_pyMapScalar.keysMapTypeMapType.__reduce__MappingMaskedArrayMemoryManagerMemoryManager.__reduce_cython__MemoryManager.__setstate_cython__MemoryMappedFileMemoryMappedFile.__reduce_cython__MemoryMappedFile.__setstate_cython__MemoryMappedFile._openMemoryMappedFile.createMemoryMappedFile.filenoMemoryMappedFile.resizeMemoryPoolMemoryPool.__reduce_cython__MemoryPool.__setstate_cython__MemoryPool.bytes_allocatedMemoryPool.max_memoryMemoryPool.num_allocationsMemoryPool.print_statsMemoryPool.release_unusedMemoryPool.total_bytes_allocatedMessageMessageReaderMessageReader.__reduce_cython__MessageReader.__setstate_cython__MessageReader.open_streamMessageReader.read_next_messageMessage.__reduce_cython__Message.__setstate_cython__Message.equalsMessage.serializeMessage.serialize_to_MetadataMetadataVersionMockOutputStreamMockOutputStream.__reduce_cython__MockOutputStream.__setstate_cython__MockOutputStream.sizeMonthDayNanoMonthDayNanoIntervalArrayMonthDayNanoIntervalArray.to_pylistMonthDayNanoIntervalScalarMonthDayNanoIntervalScalar.as_pyNA_NULLNativeFileNativeFile.__enter__NativeFile.__exit__NativeFile.__reduce_cython__NativeFile.__setstate_cython__NativeFile._assert_openNativeFile._assert_readableNativeFile._assert_seekableNativeFile._assert_writableNativeFile._download_nothreadsNativeFile._upload_nothreadsNativeFile.closeNativeFile.downloadNativeFile.filenoNativeFile.flushNativeFile.get_streamNativeFile.isattyNativeFile.metadataNativeFile.readNativeFile.read1NativeFile.read_atNativeFile.read_bufferNativeFile.readableNativeFile.readallNativeFile.readintoNativeFile.readlineNativeFile.readlinesNativeFile.seekNativeFile.seekableNativeFile.sizeNativeFile.tellNativeFile.truncateNativeFile.uploadNativeFile.writableNativeFile.writeNativeFile.writelinesNotImplementedNullArrayNullOptionsNullScalarNullScalar.as_pyNumericArrayONEAPIOPENCLOSFileOSFile.__reduce_cython__OSFile.__setstate_cython__OSFile.filenoOpaqueArrayOpaqueScalarOpaqueTypeOpaqueType.__arrow_ext_class__OpaqueType.__arrow_ext_scalar_class__OpaqueType.__reduce__PYARROW_IGNORE_TIMEZONE_PandasAPIShim_PandasAPIShim.__reduce_cython___PandasAPIShim.__setstate_cython___PandasAPIShim.data_frame_PandasAPIShim.get_rangeindex_attribute_PandasAPIShim.get_values_PandasAPIShim.infer_dtype_PandasAPIShim.is_array_like_PandasAPIShim.is_categorical_PandasAPIShim.is_data_frame_PandasAPIShim.is_datetimetz_PandasAPIShim.is_extension_array_dtype_PandasAPIShim.is_ge_v21_PandasAPIShim.is_ge_v23_PandasAPIShim.is_ge_v3_PandasAPIShim.is_ge_v3_strict_PandasAPIShim.is_index_PandasAPIShim.is_series_PandasAPIShim.is_sparse_PandasAPIShim.is_v1_PandasAPIShim.pandas_dtype_PandasAPIShim.series_PandasAPIShim.uses_string_dtype_PandasConvertible_PandasConvertible.__reduce_cython___PandasConvertible.__setstate_cython___PandasConvertible.to_pandasPeriodDtypePickleBufferProxyMemoryPoolProxyMemoryPool.__reduce_cython__ProxyMemoryPool.__setstate_cython___PyArrowDataFramePythonFilePythonFile.__reduce_cython__PythonFile.__setstate_cython__PythonFile.readlinePythonFile.readlinesPythonFile.truncate__Pyx_PyDict_NextRefQueueQueueEmptyROCMROCM_HOST_ReadPandasMixin_ReadPandasMixin.read_pandasReadStats_ReadStatsRecordBatch_RecordBatchFileReader_RecordBatchFileReader.__enter___RecordBatchFileReader.__exit___RecordBatchFileReader.__reduce_cython___RecordBatchFileReader.__setstate_cython___RecordBatchFileReader._open_RecordBatchFileReader.get_batch_RecordBatchFileReader.get_batch_with_custom_metadata_RecordBatchFileReader.read_all_RecordBatchFileWriter_RecordBatchFileWriter.__reduce_cython___RecordBatchFileWriter.__setstate_cython___RecordBatchFileWriter._openRecordBatchReaderRecordBatchReader.__arrow_c_stream__RecordBatchReader.__enter__RecordBatchReader.__exit__RecordBatchReader.__reduce_cython__RecordBatchReader.__setstate_cython__RecordBatchReader._export_to_cRecordBatchReader._import_from_cRecordBatchReader._import_from_c_capsuleRecordBatchReader.castRecordBatchReader.closeRecordBatchReader.from_batchesRecordBatchReader.from_streamRecordBatchReader.iter_batches_with_custom_metadataRecordBatchReader.read_allRecordBatchReader.read_next_batchRecordBatchReader.read_next_batch_with_custom_metadata_RecordBatchStreamReader_RecordBatchStreamReader.__reduce_cython___RecordBatchStreamReader.__setstate_cython___RecordBatchStreamReader._open_RecordBatchStreamWriter_RecordBatchStreamWriter.__reduce_cython___RecordBatchStreamWriter.__setstate_cython___RecordBatchStreamWriter._openRecordBatchWithMetadata_RecordBatchWithMetadataRecordBatch.__arrow_c_array__RecordBatch.__arrow_c_device_array__RecordBatch.__arrow_c_stream__RecordBatch.__reduce__RecordBatch.__sizeof__RecordBatch._columnRecordBatch._export_to_cRecordBatch._export_to_c_deviceRecordBatch._import_from_cRecordBatch._import_from_c_capsuleRecordBatch._import_from_c_deviceRecordBatch._import_from_c_device_capsuleRecordBatch._is_initializedRecordBatch._to_pandasRecordBatch.add_columnRecordBatch.castRecordBatch.copy_toRecordBatch.equalsRecordBatch.from_arraysRecordBatch.from_pandasRecordBatch.from_struct_arrayRecordBatch.get_total_buffer_sizeRecordBatch.remove_columnRecordBatch.rename_columnsRecordBatch.replace_schema_metadataRecordBatch.selectRecordBatch.serializeRecordBatch.set_columnRecordBatch.sliceRecordBatch.to_struct_arrayRecordBatch.to_tensorRecordBatch.validateResizableBufferResizableBuffer.resizeRunEndEncodedArrayRunEndEncodedArray._from_arraysRunEndEncodedArray.find_physical_offsetRunEndEncodedArray.find_physical_lengthRunEndEncodedArray.from_arraysRunEndEncodedArray.from_buffersRunEndEncodedScalarRunEndEncodedScalar.as_pyRunEndEncodedTypeRunEndEncodedType.__reduce__RuntimeInfoSIGINTSIGTERMSIG_DFLSIG_IGNSNAPPYScalarScalarAggregateOptionsScalar.__reduce__Scalar.as_pyScalar.castScalar.equalsScalar.validateSchemaSchema.__arrow_c_schema__Schema.__iter__Schema.__reduce__Schema.__sizeof__Schema._export_to_cSchema._fieldSchema._import_from_cSchema._import_from_c_capsuleSchema.add_metadataSchema.appendSchema.empty_tableSchema.equalsSchema.fieldSchema.field_by_nameSchema.from_pandasSchema.get_all_field_indicesSchema.get_field_indexSchema.insertSchema.removeSchema.remove_metadataSchema.serializeSchema.setSchema.to_stringSchema.with_metadataSequenceSeriesSignalStopHandlerSignalStopHandler.__enter__SignalStopHandler.__exit__SignalStopHandler.__reduce_cython__SignalStopHandler.__setstate_cython__SignalStopHandler._init_signalsSortOptionsSparseCOOTensorSparseCOOTensor.__get__.<locals>.genexprSparseCOOTensor.__reduce_cython__SparseCOOTensor.__setstate_cython__SparseCOOTensor.dim_nameSparseCOOTensor.equalsSparseCOOTensor.from_dense_numpySparseCOOTensor.from_numpySparseCOOTensor.from_pydata_sparseSparseCOOTensor.from_scipySparseCOOTensor.from_tensorSparseCOOTensor.to_numpySparseCOOTensor.to_pydata_sparseSparseCOOTensor.to_scipySparseCOOTensor.to_tensorSparseCSCMatrixSparseCSCMatrix.__get__.<locals>.genexprSparseCSCMatrix.__reduce_cython__SparseCSCMatrix.__setstate_cython__SparseCSCMatrix.dim_nameSparseCSCMatrix.equalsSparseCSCMatrix.from_dense_numpySparseCSCMatrix.from_numpySparseCSCMatrix.from_scipySparseCSCMatrix.from_tensorSparseCSCMatrix.to_numpySparseCSCMatrix.to_scipySparseCSCMatrix.to_tensorSparseCSFTensorSparseCSFTensor.__get__.<locals>.genexprSparseCSFTensor.__reduce_cython__SparseCSFTensor.__setstate_cython__SparseCSFTensor.dim_nameSparseCSFTensor.equalsSparseCSFTensor.from_dense_numpySparseCSFTensor.from_numpySparseCSFTensor.from_tensorSparseCSFTensor.to_numpySparseCSFTensor.to_tensorSparseCSRMatrixSparseCSRMatrix.__get__.<locals>.genexprSparseCSRMatrix.__reduce_cython__SparseCSRMatrix.__setstate_cython__SparseCSRMatrix.dim_nameSparseCSRMatrix.equalsSparseCSRMatrix.from_dense_numpySparseCSRMatrix.from_numpySparseCSRMatrix.from_scipySparseCSRMatrix.from_tensorSparseCSRMatrix.to_numpySparseCSRMatrix.to_scipySparseCSRMatrix.to_tensorSparseDtypeSparseUnionTypeStopTokenStopToken.__reduce_cython__StopToken.__setstate_cython__StringArrayStringArray.from_buffersStringBuilderStringBuilder.__reduce_cython__StringBuilder.__setstate_cython__StringBuilder.appendStringBuilder.append_valuesStringBuilder.finishStringScalarStringScalar.as_pyStringViewArrayStringViewBuilderStringViewBuilder.__reduce_cython__StringViewBuilder.__setstate_cython__StringViewBuilder.appendStringViewBuilder.append_valuesStringViewBuilder.finishStringViewScalarStructArrayStructArray._flattened_fieldStructArray.fieldStructArray.flattenStructArray.from_arraysStructArray.sortStructScalarStructScalar.__iter__StructScalar._as_py_tupleStructScalar.as_pyStructScalar.itemsStructTypeStructType.__iter__StructType.__reduce__StructType.fieldStructType.get_all_field_indicesStructType.get_field_indexTTableTableGroupByTableGroupBy.__init__TableGroupBy.aggregateTable.__arrow_c_stream__Table.__get__.<locals>.genexprTable.__reduce__Table.__sizeof__Table._columnTable._is_initializedTable._to_pandasTable.add_columnTable.castTable.combine_chunksTable.dropTable.equalsTable.flattenTable.from_arraysTable.from_batchesTable.from_pandasTable.from_struct_arrayTable.get_total_buffer_sizeTable.group_byTable.joinTable.join_asofTable.remove_columnTable.rename_columnsTable.replace_schema_metadataTable.selectTable.set_columnTable.sliceTable.to_batchesTable.to_readerTable.to_struct_arrayTable.unify_dictionariesTable.validate_Tabular_Tabular.__array___Tabular.__dataframe___Tabular.__reduce_cython___Tabular.__setstate_cython___Tabular._column_Tabular._ensure_integer_index_Tabular._is_initialized_Tabular.add_column_Tabular.append_column_Tabular.column_Tabular.drop_columns_Tabular.drop_null_Tabular.field_Tabular.filter_Tabular.from_pydict_Tabular.from_pylist_Tabular.itercolumns_Tabular.remove_column_Tabular.sort_by_Tabular.take_Tabular.to_pydict_Tabular.to_pylist_Tabular.to_stringTensorTensor.__dlpack__Tensor.__dlpack_device__Tensor.__reduce_cython__Tensor.__setstate_cython__Tensor._make_shape_or_strides_bufferTensor.dim_nameTensor.equalsTensor.from_numpyTensor.to_numpyTextIOBaseThreadTime32ArrayTime32ScalarTime32Scalar.as_pyTime32TypeTime64ArrayTime64ScalarTime64Scalar.as_pyTime64TypeTimedeltaTimestampTimestampArrayTimestampScalarTimestampScalar.as_pyTimestampTypeTimestampType.__reduce__TranscoderTranscoder.__call__Transcoder.__init__TransformInputStreamTransformInputStream.__reduce_cython__TransformInputStream.__setstate_cython__TrueType_BINARYType_BINARY_VIEWType_BOOLType_DATE32Type_DATE64Type_DECIMAL128Type_DECIMAL256Type_DECIMAL32Type_DECIMAL64Type_DENSE_UNIONType_DICTIONARYType_DOUBLEType_DURATIONType_FIXED_SIZE_BINARYType_FIXED_SIZE_LISTType_FLOATType_HALF_FLOATType_INT16Type_INT32Type_INT64Type_INT8Type_INTERVAL_DAY_TIMEType_INTERVAL_MONTHSType_INTERVAL_MONTH_DAY_NANOType_LARGE_BINARYType_LARGE_LISTType_LARGE_LIST_VIEWType_LARGE_STRINGType_LISTType_LIST_VIEWType_MAPType_NAType_RUN_END_ENCODEDType_SPARSE_UNIONType_STRINGType_STRING_VIEWType_STRUCTType_TIME32Type_TIME64Type_TIMESTAMPType_UINT16Type_UINT32Type_UINT64Type_UINT8UInt16ArrayUInt16ScalarUInt16Scalar.as_pyUInt32ArrayUInt32ScalarUInt32Scalar.as_pyUInt64ArrayUInt64ScalarUInt64Scalar.as_pyUInt8ArrayUInt8ScalarUInt8Scalar.as_pyUUIDUnionArrayUnionArray.childUnionArray.fieldUnionArray.from_denseUnionArray.from_sparseUnionMode_DENSEUnionMode_SPARSEUnionScalarUnionScalar.as_pyUnionTypeUnionType.__iter__UnionType.__reduce__UnionType.fieldUnknownExtensionTypeUnknownExtensionType.__arrow_ext_serialize__UnknownExtensionType.__arrow_ext_deserialize__UnsupportedOperationUuidArrayUuidScalarUuidScalar.as_pyUuidTypeUuidType.__arrow_ext_class__UuidType.__arrow_ext_scalar_class__UuidType.__reduce__V1V2V3V4V5VPIVULKANVersionVersionInfoWEBGPU_WeakrefableWriteStats_WriteStatsZSTD_aabaceroadadd_columnadd_metadataaddressaggraggr_nameaggregateaggregationsaliasalignmentallocate_bufferallow_64bitallow_copyallow_noneallow_none_for_typeanyapiappendappend_columnappend_valuesarange__arg0__arg_dict_memoargsargsortarrarray__array__array_capsulearray_dataarrays__arrow_array____arrow_c_array____arrow_c_device_array____arrow_c_schema____arrow_c_stream____arrow_ext_class____arrow_ext_deserialize____arrow_ext_scalar_class____arrow_ext_serialize__arrow_objarrow_typeas_bufferas_py_as_py_tupleasarrayasbytesascending_assert_cpu_assert_open_assert_readable_assert_seekable_assert_writableastimezoneastypeasyncio.coroutinesatexitaxisaxis_orderbbackendbackend_namebackendsbasebatchbatch_with_metadatabatchesbenchmark_PandasObjectIsNullbg_writebinarybinary_viewbit_widthblocksizebodybody_lengthbool_bool8boolboolean_break_traceback_cycle_from_framebsbufbuf_lenbufferbuffer_sizebufferedbuffersbufobj_build_infobuild_infobuild_typebybyte_widthbytes__bytes__bytes_allocatedbytes_readbz2cc_addrc_arrc_arrayc_arraysc_axis_orderc_batchc_batchesc_bufc_bufferc_buffer_sizec_buffersc_check_metadatac_child_datac_chunked_arrayc_concatenatedc_cpp_infoc_datac_datatypec_device_arrayc_dim_namesc_fieldc_field_namesc_fieldsc_file_offsetc_from_pandasc_indicesc_infoc_json_ext_typec_maskc_max_chunksizec_memory_managerc_metac_metadatac_modec_namesc_nbytesc_nullablec_offsetc_opaque_typec_optionsc_orderedc_pathc_permutationc_poolc_ptrc_rawc_readerc_record_batchc_recordbatchesc_resultc_result_recordbatchc_result_tablec_rz_bufferc_scalarc_schemac_schema_ptrc_schemasc_shapec_shrink_to_fitc_sinkc_sizec_storage_typec_streamc_tablec_tablesc_tensorc_tensor_ext_typec_timezonec_typec_type_codesc_type_namec_type_ptrc_uuid_ext_typec_vendor_name__call__call_functioncapsulecastcastedcasted_arraycasted_batchcatcategorical_typecategoriescheck_metadatachildchild_fieldschildrenchunkchunkedchunked_arraychunks__class____class_getitem__cleanupcline_in_tracebackcloseclosedcloudpickleclscoalesce_keyscodeccodecscodercodescoerce_temporal_nanosecondscoerce_to_nscolcollectionscollections.abccolumn_columncolumn_arrayscolumn_namescolumnscombine_chunkscombinedcompatcompiler_flagscompiler_idcompiler_versioncompresscompressioncompression_levelcomputeconcat_arraysconcat_batchesconcat_tablescontainer_windowcontextlibcontextmanagerconverted_arrayscoo_arraycoo_matrixcoordscopycopy_tocountcpoolcpp_build_infocpp_filecpp_versioncpp_version_infocpu_countcreatecreate_memory_mapcsc_arraycsc_matrixcsparse_tensorcsr_arraycsr_matrixctensor__cuda_loadedcurrent_threadcustom_metadatadatadata_frame__dataframe__dataframe_to_arraysdataframe_to_typesdatedate32date64date_as_objectdatetime_datetime_from_intdays_debug_printdecay_msdecimaldecimal128decimal256decimal32decimal64decodedecoder_decoderdecompressdecompressed_sizededuplicate_objectsdefault_default_chunk_sizedefault_compression_leveldefault_cpu_memory_managerdefault_memory_pooldeltadensedense_uniondestdest_codecdest_encodingdestinationdetachdetect_detect_compressiondetected_simd_leveldevicedevice_typedf__dict___dictdictionarydictionary__dictionarydictionary_decodedictionary_encodedictionary_memodiffdim_namedim_namesdistinct_countdlm_tensor__dlpack____dlpack_device____doc__donedoubledownloaddownload.<locals>.bg_writedownload.<locals>.cleanup_download_nothreads_download_nothreads.<locals>.cleanupdropdrop_columnsdrop_nulldtdtypedurationeelement_size_limitemit_dictionary_deltasempty_empty_arrayempty_tableenableenable_signal_handlersencodeencode_file_pathencoded_pathencoder_encoderendendswithensure_alignment_ensure_cuda_loaded_ensure_integer_indexensure_metadataensure_native_endianensure_type__enter__entriesenumenumerateenvironequalserrorsexcexc_infoexc_tbexc_typeexc_valexc_value__exit___export_to_c_export_to_c_deviceext_arrayext_scalarext_typeextension_columnsextension_nameextension_typeextensionsff2f4f8field_fieldfield_field_by_namefield_indexfield_indicesfield_namesfieldsfile_descriptorfile_offsetfilenofill_nullfill_valuefilterfilter_expression_filter_tablefinalfind_physical_lengthfind_physical_offsetfinishfixed_shape_tensorfixed_size_binary_typeflagsflattenflattened_flattened_fieldfloatfloat16float32float64flushfooter_offsetforeign_bufferformatfrom_arrays_from_arrays__from_arrow__from_batchesfrom_buffersfrom_codesfrom_densefrom_dense_numpyfrom_network_metricsfrom_numpyfrom_numpy_dtypefrom_numpy_ndarrayfrom_numpy_ndarray.<locals>.genexprfrom_pandasfrom_pydata_sparse_from_pydictfrom_pydict_from_pylistfrom_pylistfrom_scipyfrom_sparsefrom_storagefrom_streamfrom_struct_arrayfrom_tensorfrombytesfullfull_so_version__func__funcfunc_nohashfuture_gdb_test_sessiongenexprgetget_allget_all_field_indicesget_batchget_batch_with_custom_metadataget_datetimetz_typeget_field_index_get_pandas_type_get_pandas_type_map_get_pandas_tz_typeget_rangeindex_attributeget_record_batchget_record_batch_sizeget_streamget_tensor_sizeget_total_buffer_sizeget_values_getframegetsignalgetsizeof__getstate__getvaluegit_descriptiongit_id_group_bygroup_bygroup_by_aggrsgziphalffloathandle_handle_arrow_array_protocolhas_canonical_formathas_variadic_buffershash_have_libhdfshave_pandashave_signal_refcyclehexhinthole_size_limitii1i2i4i8idideal_bandwidth_utilization_fracidentidxidx_to_new_nameignore_metadata_import_from_c_import_from_c_capsule_import_from_c_device_import_from_c_device_capsulein_ptrin_streamincluded_fieldsincrementaldecoderincrementalencoderindentindexindex_index_typeindices_indicesindptrinfer_dtypeinfer_stringinfer_type__init____init__.<locals>.genexpr_init_signalsinner_arrayinner_batchinput_streaminsertint16int32int64int8int_indexinteger_object_nullsinvertioio_thread_countis_aliveis_array_likeis_availableis_boolean_valueis_categorical_is_coroutineis_cpuis_data_frameis_datetimetzis_extension_array_dtypeis_float_valueis_ge_v21is_ge_v23is_ge_v3is_ge_v3_strictis_index_is_initializedis_integer_valueis_max_exactis_min_exactis_mutableis_nanis_nullis_pandas_object_is_path_like_is_primitiveis_seriesis_sparseis_threading_enabledis_v1is_validisattyisdirisnanitemitem_fielditem_typeitems_itemsitems.<locals>.genexpr__iter__iter_batches_with_custom_metadataiterchunksitercolumnsjemalloc_memory_pooljemalloc_set_decay_msjoinjoin_asofjoin_typejson_jsonkkeykey_fieldkey_typekeys_keyskeys_sortedkindkwargslarge_binarylarge_listlarge_list_viewlarge_strlarge_stringlarge_utf8lazyleft_suffixlengthlevellexsortliblinelineslist_list_flattenlist_parent_indiceslist_size_list_sizelist_typelist_value_lengthlist_viewloadslog_memory_allocationslogging_memory_poollogical_length_logical_lengthlogical_offset_logical_offsetlookuplossylowerlz4ma__main__main_threadmajormake_datetimetz_make_shape_or_strides_buffermake_tz_awaremap_mappingmaps_as_pydictsmaskmathmaxmax_chunksizemax_ideal_request_size_mibmax_memorymax_output_sizemaximum_compression_levelmaybe_py_list_member_names___members__memory_mapmemory_poolmessagemeta__metaclass__metadatametadata_lengthmetadata_versionmicrosecondsmillisecondsmimalloc_memory_poolminminimum_compression_levelminormissingmmapmodemodule__module__month_day_nano_interval__mro_entries__msnn_rowsname__name___namenamedtuplenamesnan_as_nullnan_is_nullnbatchesnbytesndarray_ndarray_to_arrow_typendim__new__new_fieldnew_namenew_schemanew_sizenew_typenewcolsnextnfnomasknon_default_kwargsnone_normalize_slicenot_equalnpnsntnthreadsnullnull_bitmapnull_countnull_encodingnull_selection_behaviornull_to_nannullablenullsnum_allocationsnum_arraysnum_buffersnum_chunksnum_columnsnum_dictionary_batchesnum_dictionary_deltasnum_fieldsnum_messagesnum_record_batchesnum_replaced_dictionariesnum_rowsnum_threadsnumpyoobjobjectobject_offsetoffsets_offsetsonopaqueopen_openopen_streamoptoptionsorderorderedordered_dictosotherother_arrother_batchother_tableother_typeoutout_arrayout_bufout_coordsout_dataout_indicesout_indptrout_ptrout_schemaout_schema_ptroutputoutput_bufferoutput_lengthoutput_sizeoutput_streamoutput_typeowned_buf__pac_pacpacpackpackage_kindpandas_pandas_apipandas_compatpandas_dtypepandas_typepandas_type_mapparentpatchpath__pc_pcpcpd_perform_join_perform_join_asofpermissivepermutationpicklepiecespoolpoppospositionprecisionprefetch_limit__prepare__presentpreserve_indexpreview_colsprint_statsprodpromotepromote_optionsprotocolproxy_memory_poolput_nowaitpy_bufpy_bufferpy_fieldpy_listpy_valpyarrowpyarrow.aceropyarrow.computepyarrow.cudapyarrow.interchange.dataframepyarrow.libpyarrow.pandas_compatpyarrow.utilpyarrow.vendored.versionpybuf_pydecimalpydictpylistpyobj_python_extension_types_registry__pyx_capi____pyx_checksum__pyx_result__pyx_state__pyx_type__pyx_unpickle__PandasAPIShim__pyx_unpickle__PandasConvertible__pyx_unpickle__Tabular__pyx_vtable__qsize__qualname__queuerrange_size_limitravelrawrbrd_handlerereadread1read_allread_atread_bufferread_messageread_next_batchread_next_batch_with_custom_metadataread_next_messageread_pandasread_record_batchread_schemaread_tensorreadablereadallreaderreadintoreadlinereadlines_reconstruct_reconstruct_record_batch_reconstruct_tablerecord_batchrecordbatchrecordbatchesrecursive__reduce____reduce_cython____reduce_ex__ree_arrayree_typeregisterregister_extension_type_registry_nannyrelease_registryrelease_unusedremoveremove_columnremove_metadatarename_columnsrepeatreplacereplace_schema_metadata__repr__requestedrequested_schemarequested_typerequirerequirementsresresizableresize_restore_arrayresultresult_dictresult_objresultsretreturnright_byright_keysright_onright_suffixright_tablerowrow_majorrun_end_encoderun_end_encodedrun_end_type_run_end_typerun_ends_run_endsruntime_infossafesarrscalarscaleschemaschema_as_stringschema_capsuleschemasscipyscipy.sparsesecondsseekseekableselectselfself_destructsendserializeserialize_toserializedseriessetset_columnset_cpu_countset_io_thread_countset_memcopy_blocksizeset_memcopy_threadsset_memcopy_thresholdset_memory_pool__set_name__set_timezone_db_pathsetdefault__setstate____setstate_cython__shapeshow_field_metadatashow_metadatashow_schema_metadatashrink_to_fitsigsignalsignumsimd_levelsinksize__sizeof__sizes_sizesskip_new_linesskipnasleepslice__slots__snappyso_versionsortsort_bysort_indicessort_keyssortingsourcesource_pathspsp_scalarsp_storagesp_tensorsparsesparse_unionsplit_blockssrc_codecsrc_encodingstablestackstacklevelstartstartswithstatestaticmethodstepstopstoragestorage_arrstorage_type__str__strstreamstream_capsulestream_or_pathstrftimestrictstridesstringstring_to_tzinfostring_view_stringify_pathstrings_to_categoricalstruct_structstruct_arraystruct_typesumsum_duplicatessupersupported_memory_backendssupports_compression_levelsyssystem_memory_poolt_readertable_tabletable_or_batchtable_to_blockstable_to_dataframetablestaketargettarget_schematarget_typetbtelltemp_memotensor__test__this_arrthis_batchthis_tablethreadingthresholdthrowtimetime32time64time_to_first_byte_millistimedeltatimeouttimestamptimestamp_as_objecttimezonetitleto_batchesto_dictto_numpyto_numpy_ndarray_to_pandasto_pandas_to_pandas_dtypeto_pandas_dtypeto_pybytesto_pydata_sparseto_pydictto_pylistto_readerto_scipyto_stringto_struct_arrayto_tensortobytestolerancetolisttop_level_indenttosorttotal_allocated_bytestotal_buffer_sizetotal_bytestotal_bytes_allocatedtracebacktranscoding_input_streamtransfer_bandwidth_mib_per_sectransform_functruncatetruncate_metadatatytyptype_typetype_type_codestype_for_aliastype_idtype_nametypestypes_mappertztzinfotzinfo_to_stringu1u2u4u8uint16uint32uint64uint8unify_dictionariesunify_schemasunionuniqueunitunit_codeunregister_extension_typeupdateuploadupload.<locals>.bg_write_upload_nothreadsupperususe_legacy_formatuse_pandas_sentinelsuse_setstateuse_threads_use_threadsuses_string_dtypeutcutf8uuidvvalvalidatevaluevalue_countsvalue_fieldvalue_lengthsvalue_offsetsvalue_parent_indicesvalue_type_value_typevalues_valuesvendor_nameversion__version__version_infoviewvstackwwarnwarningswbwhencewindowwith_metadatawith_namewith_nullablewith_typewr_handlewrap_arraywrappedwritablewritewrite_batchwrite_queuewrite_tablewrite_tensorwriteablewritelineswriterwriter_threadxzero_copy_onlyzipzstd= arrow::Field::MergeOptions (PyObject *)  arrow::MemoryPool *(struct __pyx_obj_7pyarrow_3lib_MemoryPool *) PyObject *( arrow::Datum const &) PyObject *( arrow::MemoryPool *) PyObject *( arrow::ipc::ReadStats) PyObject *(PyObject *) PyObject *(PyObject *, bool, std::shared_ptr< arrow::io::InputStream>  *) PyObject *(PyObject *, bool, std::shared_ptr< arrow::io::RandomAccessFile>  *) PyObject *(PyObject *, std::shared_ptr< arrow::io::OutputStream>  *) PyObject *(arrow::Status const &)  PyObject *(enum  arrow::TimeUnit::type) PyObject *(std::shared_ptr< arrow::Array>  const &) PyObject *(std::shared_ptr< arrow::Buffer>  const &) PyObject *(std::shared_ptr< arrow::ChunkedArray>  const &) PyObject *(std::shared_ptr< arrow::DataType>  const &) PyObject *(std::shared_ptr< arrow::Field>  const &) PyObject *(std::shared_ptr< arrow::KeyValueMetadata const >  const &) PyObject *(std::shared_ptr< arrow::RecordBatch>  const &) PyObject *(std::shared_ptr< arrow::ResizableBuffer>  const &) PyObject *(std::shared_ptr< arrow::Scalar>  const &) PyObject *(std::shared_ptr< arrow::Schema>  const &) PyObject *(std::shared_ptr< arrow::SparseCOOTensor>  const &) PyObject *(std::shared_ptr< arrow::SparseCSCMatrix>  const &) PyObject *(std::shared_ptr< arrow::SparseCSFTensor>  const &) PyObject *(std::shared_ptr< arrow::SparseCSRMatrix>  const &) PyObject *(std::shared_ptr< arrow::Table>  const &) PyObject *(std::shared_ptr< arrow::Tensor>  const &) enum  arrow::TimeUnit::type (PyObject *) int (PyObject *)               int (arrow::Status const &)  std::shared_ptr< arrow::Array>  (PyObject *) std::shared_ptr< arrow::Buffer>  (PyObject *) std::shared_ptr< arrow::ChunkedArray>  (PyObject *) std::shared_ptr< arrow::DataType>  (PyObject *) std::shared_ptr< arrow::Field>  (PyObject *) std::shared_ptr< arrow::KeyValueMetadata const >  (PyObject *) std::shared_ptr< arrow::RecordBatch>  (PyObject *) std::shared_ptr< arrow::Scalar>  (PyObject *) std::shared_ptr< arrow::Schema>  (PyObject *) std::shared_ptr< arrow::SparseCOOTensor>  (PyObject *) std::shared_ptr< arrow::SparseCSCMatrix>  (PyObject *) std::shared_ptr< arrow::SparseCSFTensor>  (PyObject *) std::shared_ptr< arrow::SparseCSRMatrix>  (PyObject *) std::shared_ptr< arrow::Table>  (PyObject *) std::shared_ptr< arrow::Tensor>  (PyObject *) std::shared_ptr< arrow::io::InputStream>  (std::shared_ptr< arrow::io::InputStream> , PyObject *, PyObject *) std::shared_ptr<std::function<__pyx_t_7pyarrow_8includes_8libarrow_StreamWrapFunc> >  (PyObject *, PyObject *) struct __pyx_obj_7pyarrow_3lib_DataType *(PyObject *, int __pyx_skip_dispatch, struct __pyx_opt_args_7pyarrow_3lib_ensure_type *__pyx_optional_args) struct __pyx_obj_7pyarrow_3lib_DataType *(enum  arrow::Type::type) struct __pyx_obj_7pyarrow_3lib_IpcReadOptions *( arrow::ipc::IpcReadOptions) struct __pyx_obj_7pyarrow_3lib_IpcWriteOptions *( arrow::ipc::IpcWriteOptions) struct __pyx_obj_7pyarrow_3lib_NativeFile *(PyObject *, bool) _parse_field_merge_options maybe_unbox_memory_pool wrap_datum box_memory_pool _wrap_read_stats wrap_array_output get_input_stream get_reader get_writer convert_status pyarrow_internal_convert_status timeunit_to_string pyarrow_wrap_array pyarrow_wrap_buffer pyarrow_wrap_chunked_array pyarrow_wrap_data_type pyarrow_wrap_field pyarrow_wrap_metadata pyarrow_wrap_batch pyarrow_wrap_resizable_buffer pyarrow_wrap_scalar pyarrow_wrap_schema pyarrow_wrap_sparse_coo_tensor pyarrow_wrap_sparse_csc_matrix pyarrow_wrap_sparse_csf_tensor pyarrow_wrap_sparse_csr_matrix pyarrow_wrap_table pyarrow_wrap_tensor string_to_timeunit pyarrow_is_array pyarrow_is_batch pyarrow_is_buffer pyarrow_is_chunked_array pyarrow_is_data_type pyarrow_is_field pyarrow_is_metadata pyarrow_is_scalar pyarrow_is_schema pyarrow_is_sparse_coo_tensor pyarrow_is_sparse_csc_matrix pyarrow_is_sparse_csf_tensor pyarrow_is_sparse_csr_matrix pyarrow_is_table pyarrow_is_tensor check_status pyarrow_internal_check_status pyarrow_unwrap_array pyarrow_unwrap_buffer pyarrow_unwrap_chunked_array pyarrow_unwrap_data_type pyarrow_unwrap_field pyarrow_unwrap_metadata pyarrow_unwrap_batch pyarrow_unwrap_scalar pyarrow_unwrap_schema pyarrow_unwrap_sparse_coo_tensor pyarrow_unwrap_sparse_csc_matrix pyarrow_unwrap_sparse_csf_tensor pyarrow_unwrap_sparse_csr_matrix pyarrow_unwrap_table pyarrow_unwrap_tensor native_transcoding_input_stream make_streamwrap_func ensure_type primitive_type wrap_ipc_read_options wrap_ipc_write_options get_native_fileÄ0 à>òò!–)®–0C¿7»!4 	–2∞!‡– †††}∞A–0∞0 	ê–,®A‡ÿàwêcòÿòÿòò1ÿò†q®®d∞"∞E∏ÿò††!ÿòò1ÿò†q®®d∞"∞H∏Aÿò††!‡ÿò*†A–%@¿¿ÿòòòt†2†U®!®1‡àtê5òÄ0 àBàfêAêQÿ–!††.∞–1B¿!¿1Ä0 à<êqÄÿ0∞∞∞q– –0∞x ÿêo†Q†aÿÿêa‡Äzêê(ò!ÿêÿ	êWòAÿêêqò†Qÿ	ê1êIòX†Qÿ–&†a†y∞∞ÿ
+êê(ò)†1ÿ
+êê(ò)†1ÿ
+êê(ò!ÿêò1òH†A‡àiêqÿ:∏!∏6¿‡Ä|ê3êaÿ–)®®!‡Ä|ê7ò%òt†<®s∞!ÿ–%†Q†h®a‡Ä|ê7ò!ÿ–'†q®∞‡à1Ä –#†1–1–1A¿ÿ,–,@¿ÿ1∞t 	àLòÿà;êcòÿòÿàtê2ê^†1ÿêvòV†=∞ÿò†]∞!ÿò†^∞1ÿòÿòa–+®12 	àLòÿêÿàEêêaêtò1ÿêdò&†††:®Q–.>∏aÿàq– (–(;∏18 –4∞A∞Qÿ	
+ÿê.†††q®®v∞V∏1ÿ–òQòa–"†/∞ 	–#†1†AÿàMòò(†*®K∞|¿1ÿàvêYòa–+®1B 	ê!ÿàEêêaêtò1ÿê4êvòQòb†ÿêTòò"òJ†a–'7∞qÿê7ò"òF†!ÿà|ò1òA–+®1B 	êêZòq– 0∞ÿêêGò1ÿêê!ê8ò6††'®®%®t∞:∏QÿêgòU†!†4†qÿàq– ê1B Äwàaàxêqÿê–.®a®v–5H»ÿà9êGò1ÿêVò>®®!ÿàq‡Äzêê(ò!ÿêêvòQ‡àêÿà:êQêfòAÿêuòBòa‡êqÿà9êCêqÿê)ò1òAÿê
+ò!ò8†1‡àòa–4∞Aÿ–$†A†Q‡àFê!ê;òaòz®ÿàVê8ò1òAÿ
+à,êaêq‡à1– êò1D 	–3∞1∞Aÿò à;êa–(®ÿÄuàCàqÿàtê1‡	–	!††!ÿ	
+ÿànòAò_®A®T∞∏‡–òQòaÄ &–%@¿ÿà1àGê7ò#òT†®AÄ –ò]®!ÿê–*®!‡ê\††(®)∞1∞J∏aÿ"/®{∏!∏:¿Qÿ;E¿Qÿ;E¿Qÿ"-®Y∞a∞z¿ÿ"2∞)∏1∏J¿aÿ".®i∞q∏
+¿!ÿ"3∞9∏Aÿ&0∞ÿ"1∞∏!∏:¿Qÿ")®∞!∞:∏Qÿ"2∞)∏1∏J¿aÿ"/®y∏∏¿1ÿ"-®Y∞a∞z¿»V–ST à9êAê[††k∞∏∏¿¿qÿ$†AÄà1X Äwàdê!ÿà~òQòa ò&†–!9∏∏!ÿ–!††!–ò1 	à7ê#êQ
+ êTòÿàtê5òò–ò1 	àGê9òAòQ–1∞$ 	àLò 	–òG†1ÿò(–"9∏∏!‡à|ò3òd†!ÿÿ#†3†b®®Q®f∞M¿¿aÿ"–"6∞a∞qÿ–'†qÿò*†Aÿ)®®$–.G¿q»–VW–WX òd†!‡ò$òa‡ò†q®®ÿò†Q†a†q‡ÿòò†A†V®>∏¿!‡–òq–1∞$ 	àLò
+ 	–òG†1ÿòF–"9∏∏!‡à~òS††Aÿÿ#†4†u®A®_∏E¿ÿ"–"6∞a∞qÿ–'†qÿò*†Aÿ)®®$–.K»1–L\–\]–]^ òd†!‡ò$òa‡ò†q®®ÿò†Q†a†q‡ÿò–*®!®6∞∏y»‡–òq–+®1, 	àLòÿàqêêêq–(–(9∏∏U¿!– "†!, 	ò1ÿò – ††Q†k∞∏ÿ&,®A®Qÿ–òaòq–+®1( 	–-®T∞∏$∏aÿ–9∏∏&¿ÿê.††ÿ–!††!Ä à^ò1‡à;êaÿê9òAòV†1ÿòI†Q†f®A– ò1 Äqÿêqò‡êqòÄ2 à>òò!Ä "–!2∞(∏!ÿò1ÿÄ}êFò!–1∞∞&∏ÿÄuàAàSêòT†ÿà1Äÿ–!†–"2∞!∞8∏1–2∞!& 	–òG†1ÿò–6∞a∞qÿàtê8ò3òaÿêtò5††–,?∏q‡ò†q®®‡ÿò–0∞∞∞Y∏a‡àq–2∞!  	àLò *®‡–òG†1ÿò(–"9∏∏!‡à|ò3òd†!ÿÿòd†%†q®∞U∏!ÿ–'†qÿò*†Aÿ)®®$–.G¿q»–VW–WX ò!‡êa‡ò†q®®‡ÿò–+®1®G–3F¿a‡àq–2∞!" 	àLòÿàtê:òR–2∞!∞1–2∞!" 	àLòÿàuêM††!†6–)<∏A∏Q– ê.– 2∞!Z 	!† à;êa–(®ÿ–"†!†1‡êQÿÄuàGê5òòD††C†qÿòÿàtê1‡Ä~êQêaÿê
+ò!ò7†!†1‡à8ê1‡ÄuàGê1ÿà[òòÿàxêrò‡Ä|ê3êaÿàòa‡àòa‡àAàQÿ	
+ÿê.†–!2∞!∞7∏&¿	» à7ê$êbò†3†c®ÿàGê4êròòq† à^ò1òE††R†z∞∞!ÿê5òò‡ÄêgòQÿê†®Q–.>∏aÿà1– 2∞!b Äzêê2êSò
+†"†Aÿàjòòÿêêa–)®®+∞Qÿ–!††!Ä2 ÄuàCàqÿêAÿ	àcêÿêA‡àjò–9∏∏!‡ÄzêêAÿ–òq†‡ò*†H®A®Q‡ÄuàAàWêAêQÿêAê]†!‡à1– 3∞12 Äzêê2êSò
+†"†Aÿàjòòÿêêa–*®!®;∞aÿ–!††!–3∞1 "† 	à4–#†1ÿê4–+®1–,<∏A‡ê–&†a‡êl†#†Q‡êeò1òA‡à4àwêa–'†qÿêTò–*®!‡ êQ‡ 	àqÿê1‡	 	àEêê!‡ò	†®®∞ 	àkòòq†ÿà4àsê!ÿê+òQ–3∞1∞A‡êVò1‡#†1ÿ%†Q‡	ÿÿÿ!†®qÿòd†"†E®®/∏‡òq ê;òc†ÿ‡–4∞A∞]¿!ÿ56‡ê=†	®ÿò+†U®!ÿòF†!†1‡‡ò;†a†q‡êêÿê1‡êUò!ÿà9êGò1ÿê(ò!ò4òx†q®®H∞A∞Q–*®!ÿ%3∞1ÿ%&ÿàKêwòaÿàHêO–#:∏!∏1ÿ	ÿêYòaòqÿ 	ê!ê8ò7†!†4†q‡òaÿà>ò†ÿêQ‡ÿàwêcòÿêJòn®Aÿ*0∞∞∞U∏$∏d¿!ÿ15∞Q êJòn®Aÿ*/®q∞∞E∏∏Qÿ04∞A‡àJ–)®®$®g∞T∏∏7¿!– –3∞1ÿòa, òòaòqÿà7ê+òQòe†8®9∞L¿ÿ0∞–3∞1& ò-†q®ÿ!†®a®qÿ:;ÿÿò–*®!®6∞∞Qÿ+9∏ÿ+:∏!–3∞1& ò-†q®ÿ!†®a®qÿ:;ÿÿòò†A†V®4®qÿ%3∞1ÿ%4∞A– 3∞1b Äzêê2êSò
+†"†Aÿàjòòÿêêa–*®!®;∞aÿ–!††!– 3–3C¿1X à;êgòQÿà6êò‡ààQÿàzòò!‡Ä|ê7ò!ÿàEêÿò†1†A‡ÄzêòÿàEêÿêz††'®®!‡$–$8∏¿¿‡	
+ÿòN–*@¿¿Qÿêj†	®∏‡ÄuàAàQ‡à1–3∞>¿ÿ%&ÿàKêwòaÿàHêO–#:∏!∏1ÿòò(†!†4†qÿÿê
+ò.–(A¿¿aÿêL††Aÿ–!–!=∏T¿»»A––)®( 	à3àgêQÿêL†–$5∞Q∞e∏2∏T¿‡êL††b®®W∞G∏4∏y»»Aÿê#êRê}†AÿêHòCòr†®Q®j∏¿Q‡àtê5òò– "†!ÿ& 	–4∞A∞Q Äqÿÿò)†1†N∞!ÿ'†q®®aÿ–,®A®Q‡ÿêy††®q∞∏a∏v¿Qÿ–"†!†1–4∞AR 	àLò !– 7∞q∏‡ÿê~†Q†d®&∞∏a∏q‡–!††!–4∞AT 	àLòÿà4à|ò3òaÿê5òòòU†$†a‡ê=†††Q–4∞A
+ 	–òQ‡êl†#†Q‡	ÿê&òòQòaÿàtê1ÿ êêaêq– !†ÿò
+†!ÿ – 4∞AÿÄxàwêaÿàqÿÄq‡à8ê3êaÿê2êVò1òAÿàrêêqòÿê/††!ÿÄzêê-òqÿàwêaê|†8®1ÿêk††Q†f®Aÿà1– 4∞Al 	êgòX†Q†a‡Äzêê*òAÿà8ê1ÿê)ò1òAÿêQ‡êUò!ò7†+®Q–.C¿1ÿ$†A‡Äzêê+òQÿêa‡êeò1òI†[∞–1G¿q‡àFê!ê<òq†
+®+∞[¿ÿ !ÿÄuàAàQÿà1–)® 	à4–#†1ÿê4–)®®(∞!‡êeò1òAÿ–òQ‡êl†#†Q‡àqÿê1‡	 	ò	†®®∞ÿêVò1‡	ÿÿêfòE††!ÿê4êqÿ‡ê=†	®ÿò+†U®!ÿòF†!†1‡‡ò;†a†q‡ê1‡êUò!ÿà9êGò1ÿê(ò!ò4òx†q®®H∞A∞QÄ à4àvêQÿÿêòQòaÿÿàjò–-®Q®a‡Äzêê'òÿàqÿà5ê–5∞Q 	'†aÿÿò–.®d∞'∏∏Qÿ ††®1–5∞Q (†q‡à>ò†ÿòa‡ÿòòòW†D®®+∞Q∞e∏6¿¿!ÿ67– 5∞QÿÄuàCàqÿêò
+†!†8®1ÿ	àcêÿêò
+†!†=∞ÿ	àcêÿêò
+†!†=∞ 	à;êaÿê;òc†®1®G∞3∞h∏e¿1‡à6êê5òò1ÿê*òAÿ6∞a∞q
+ 	êò
+†!†=∞∞c∏‡	àêò!ò6††C†r®‡ÄwàgêQÿàRàxêqòòx†y∞∞[¿¿‡à1Ä à5êòAòX†W®AÄ, à6êÄ6 à>òò!Ä6 –ò7†!†6®Ä6 Äzêê,òaÿêêaêxòqÿ	ê1êL†ÿê‡àiêqò‡–+®1®F∞!ÿ–!††!Ä6 Äzêê,òaÿêêaêxòqÿ	ê1êL†ÿê‡àiêqò‡–&†a†v®Qÿ–!††!–6∞a0 	àtê6ò†††u®I∞Q–6∞aF 	àLòÿà6êêAÿê1 "††Qÿ"†%†q ÿêZòw†a†v®^∏1‡àq– 6∞aÿÄ{ê$êcòòAÿàqÿ	ê1êDòÿàqÿ	ê1êDòÿà~òQòa‡àiêq–1∞∞$∞a∞q–6∞o¿Q %†A 	à}òAÿàd–$†B†d®!ÿÿòòòX†T®ÿ%†Q†e®9∞A∞QÄ à7ê!ê1–7∞~¿Qÿ . &†Q‡êKòq†ÿê	òòQ‡–òS†ÿê*òAÿ 	êa‡à1ÿ–0∞∞∞qÿòM–);∏1∏A‡êo†Q†m∞<∏qÿòG†7®$®b∞∏Q‡ÿò!ÿêGò2ò[®ÿòòaÿòòaÿÿ 	àyò†Q– †  	à7ê#êQÿò†q–(;∏1∏D¿‡ê=††®\∏‡–%†Qÿ– †  	à7ê#êQÿò†q–(<∏A∏T¿‡ê=††®\∏‡–%†Qÿ–ò!  "† 	à7ê#êQÿàtê4êq‡êTòÿòÿÿòD††Q†aÿêtò1ÿÿò'††!ÿêsò%òq†‡êtò5††2†T®®a‡êq‡ê–&†a 	–-®Q®f∞A‡òM–);∏1∏I¿Qÿÿò†q®®d∞"∞E∏∏*¿A‡à;êbòÿòaòq††]∞!‡–!††!–7∞qF 	àLò‡'†t®1ÿ3–3G¿q» 	à4àqÿê1‡ÿêZòw†a†v®^∏1‡àq– –7∞qj 	–3∞1∞A‡	ÿ%.®a‡ÄzêêAÿêêQÿÿò;†aÿà6êê+òS†ÿòa‡à	êÿê
+ò!ò5†‡–"–"<∏Aÿ–%†S®∞A ––,®C®qÿ	
+ÿò†qÿòQòj®	∞‡–òQòaÄ à8ê1êA–8∏8 	òQÿêêVò9†F®&∞∞3∞f∏G¿1‡à1ÿ–%†Qÿ<∏A∏Q 	–òG†1ÿò(–"9∏∏!‡à|ò3òd†!ÿê4êtò1ÿ–-®Qÿ‡ÿ#†3†b®®Q®f∞M¿¿aÿ"–"6∞a∞qÿ–'†qÿò*†Aÿ)®®$–.G¿q»–VW–WX òd†!‡ò$òa‡ò†q®®ÿ–,®A®Q®a‡ÿò–*®!ÿên–$<∏Aÿò‡–òq–8∏8 	òQÿêêVò9†F®&∞∞3∞f∏G¿1‡à1ÿ–%†Qÿ<∏A∏Q 	–òG†1ÿòF–"9∏∏!‡à~òS††Aÿê4êtò1ÿ–-®Qÿ‡ÿ#†4†u®A®_∏E¿ÿ"–"6∞a∞qÿ–'†qÿò*†Aÿ)®®$–.K»1–L\–\]–]^ òd†!‡ò$òa‡ò†q®®ÿ–,®A®Q®a‡ÿò–0∞ÿên–$<∏F¿)»1‡–òq–8∏` 	àLò‡ – 7∞q∏ ÿê~–%8∏¿1ÿêdò)†1‡–!††!–8∏z 	àLò‡ – 7∞q∏ ÿê~–%8–8J»!ÿ–'†q‡–)®®!Ä à9êAêQÄ$ à9êAê^†1†N∞!∞;∏aÄ
+ 	#–"9∏∏!‡Ä{ê'òÿ–(®–3L»Aÿ#†1†A†W®A®U∞$∞g∏Qÿ–ò†ÿ–&†k–1J»!ÿ#†1†A†W®A®U∞$∞g∏Q‡Äzêêq‡–0∞‡Äyê‡ê$êaêuòAÿàYêa‡ê%êq‡	
+ÿêAÿ0∞∞∏D¿¿ÿ12∞! –òQòaÄAÄA0 	à2àSêêL††2†R†qÿê*òAòQ‡–!††$†n∞F∏!∏1ÄA0 ÿòòF†(®!ÿàq–"†!†3†d®%®qÄAÿ23& 	àEêÿê:òQòaÿà:êWòAÿêêQÿò:†Q†g®Q®a 	êê8ò1òH†F®&∞∏Qÿà6êêsò!ÿê*òAòQ 	êA–.®a–/D¿Aÿ/5∞X∏Qÿ/<∏A∏Qÿ–-®Q®aÄA2 	êê,òaòu†G®4®y∏ÿàuêL††®∞ÄAÿ3I»–TU0 	#–"9∏∏!‡ê7ò!ò9†E®ÿê'òò!‡–)®®&∞‡à5êêqÿÿên†Aÿ#5∞QÿòJ†h®c∞∞$∞g∏S¿¿¿W»A‡ÿên†Aÿ#.®aÿ ††1†D®®s∞!∞4∞w∏aÿ–.®a®qÿàiêqÿàqÄAÿ3I»–TUp 	#–"9∏∏!‡ê7ò!ò9†E®ÿê'òò!‡–)®®&∞‡à5êêqÿÿên†Aÿ0∞ÿòJ†h®c∞∞$∞g∏S¿¿¿W»A‡ÿên†Aÿ)®ÿ ††1†D®®s∞!∞4∞w∏aÿ–.®a®qÿàiêqÿàqÄA4 	àLòÿà6êêAÿê1 '†d®!ÿ'†u®A ÿêXòW†A†V®1‡àqÄA4 ÿò†q®®G∞<∏q¿‡–"†!†1ÄA4 	àtê7–-®Q®g∞Q∞a–$†A6 !– 7∞q∏‡ÿê^†1†O∞1∞F∏$∏aÿ45ÿ–"†!†1ÄA6 	à:êQên†Aÿê5ò†Q†a†{–2D¿A¿Q‡ê5ò
