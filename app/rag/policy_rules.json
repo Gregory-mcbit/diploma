@@ -1,0 +1,71 @@
+[
+  {
+    "id": "profile-conservative-drawdown",
+    "category": "profile_mapping",
+    "description": "Conservative portfolios cap theoretical drawdown tolerance at 10%.",
+    "risk_profiles": ["conservative"],
+    "max_drawdown_tolerance": 0.1,
+    "priority": 100
+  },
+  {
+    "id": "profile-moderate-drawdown",
+    "category": "profile_mapping",
+    "description": "Moderate portfolios cap theoretical drawdown tolerance at 20%.",
+    "risk_profiles": ["moderate"],
+    "max_drawdown_tolerance": 0.2,
+    "priority": 100
+  },
+  {
+    "id": "profile-aggressive-drawdown",
+    "category": "profile_mapping",
+    "description": "Aggressive portfolios cap theoretical drawdown tolerance at 35%.",
+    "risk_profiles": ["aggressive"],
+    "max_drawdown_tolerance": 0.35,
+    "priority": 100
+  },
+  {
+    "id": "global-sector-cap",
+    "category": "concentration_limits",
+    "description": "No single sector or correlated cluster may exceed 35% of portfolio weight.",
+    "max_sector_weight": 0.35,
+    "priority": 90
+  },
+  {
+    "id": "global-correlation-cap",
+    "category": "correlation_rules",
+    "description": "Highly correlated assets above 0.85 pairwise correlation should be bounded.",
+    "max_correlation_threshold": 0.85,
+    "priority": 90
+  },
+  {
+    "id": "global-cash-buffer",
+    "category": "liquidity_rules",
+    "description": "All portfolios should retain at least a 2% cash buffer for friction and rebalancing.",
+    "min_cash_weight": 0.02,
+    "priority": 80
+  },
+  {
+    "id": "bullish-single-asset-cap",
+    "category": "regime_tactical",
+    "description": "Bullish regimes may allow up to 25% in a single high-conviction asset.",
+    "regimes": ["bullish"],
+    "max_asset_weight": 0.25,
+    "priority": 70
+  },
+  {
+    "id": "risk-off-defensive-cap",
+    "category": "regime_tactical",
+    "description": "Risk-off, bearish, or high-volatility regimes cap single-asset exposure at 10%.",
+    "regimes": ["risk_off", "bearish", "high_volatility"],
+    "max_asset_weight": 0.1,
+    "priority": 95
+  },
+  {
+    "id": "risk-off-cash-buffer",
+    "category": "liquidity_rules",
+    "description": "Risk-off, bearish, or high-volatility regimes require at least a 10% cash buffer.",
+    "regimes": ["risk_off", "bearish", "high_volatility"],
+    "min_cash_weight": 0.1,
+    "priority": 95
+  }
+]

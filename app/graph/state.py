@@ -1,55 +1,55 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 from typing_extensions import TypedDict
 from app.domain.schemas import (
-    InvestorProfile,
-    RegimeReport,
-    AssetScore,
+    BacktestResult,
     CandidatePortfolio,
-    RiskReport,
     CriticReport,
-    FinalRecommendation
+    DecisionLogEntry,
+    EffectivePolicy,
+    AssetScore,
+    FeatureSnapshot,
+    FinalRecommendation,
+    FundamentalSnapshot,
+    InvestorProfile,
+    MacroData,
+    MemoryReference,
+    NewsArticle,
+    NewsDigest,
+    MonitoringDecision,
+    ProvenanceRecord,
+    RegimeReport,
+    RiskReport,
+    TraceEvent,
 )
 
 
 class GraphState(TypedDict):
-    """
-    The shared state dictionary representing the data flow through our LangGraph multi-agent pipeline.
-    This design actively prevents State Bloat by holding refs to massive data structures rather than
-    the raw data itself.
-    """
-    
-    # ----------------------------------------
-    # Pipeline Inputs
-    # ----------------------------------------
     user_query: str
-    
-    # ----------------------------------------
-    # 1. Profile Phase
-    # ----------------------------------------
+    request_id: str
+    correlation_id: str
+
     profile: Optional[InvestorProfile]
-    
-    # ----------------------------------------
-    # 2. Market Environment & Data Phase
-    # ----------------------------------------
-    universe: List[str]
-    regime: Optional[RegimeReport]
+    current_universe: List[str]
+    market_data_pointer: Optional[str]
+    fundamentals: Dict[str, FundamentalSnapshot]
+    macro_data: Optional[MacroData]
+    features: Dict[str, FeatureSnapshot]
+    news_articles: Dict[str, List[NewsArticle]]
+    news_digest: Optional[NewsDigest]
     asset_scores: Dict[str, AssetScore]
-    
-    # Storage/DB References (Used to avoid stuffing JSONs with heavy dataframes)
-    market_data_ref: Optional[str]
-    news_context_ref: Optional[str]
-    
-    # ----------------------------------------
-    # 3. Validation & Critic Loop Phase
-    # ----------------------------------------
-    current_portfolio: Optional[CandidatePortfolio]
+    market_regime: Optional[RegimeReport]
+    effective_policy: Optional[EffectivePolicy]
+    active_portfolio: Optional[CandidatePortfolio]
+    monitoring_decision: Optional[MonitoringDecision]
+    proposed_portfolio: Optional[CandidatePortfolio]
+    backtest_result: Optional[BacktestResult]
     risk_report: Optional[RiskReport]
-    
-    # CRITICAL: List of past critic reports to prevent infinite loops (The circuit breaker memory)
+    critic_report: Optional[CriticReport]
     critic_history: List[CriticReport] 
     revision_count: int
-    
-    # ----------------------------------------
-    # 4. Final Output Phase
-    # ----------------------------------------
-    final_recommendation: Optional[FinalRecommendation]
+    provenance: Dict[str, ProvenanceRecord]
+    freshness_map: Dict[str, str]
+    memory_refs: List[MemoryReference]
+    decision_log: List[DecisionLogEntry]
+    trace_log: List[TraceEvent]
+    final_report: Optional[FinalRecommendation]

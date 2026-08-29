@@ -1,63 +1,58 @@
 import os
-import xgboost as xgb
-import pandas as pd
+import sys
+import json
+import subprocess
 from typing import List, Dict
-from app.domain.schemas import AssetScore, FactorScores
-from app.ml.training.feature_engine import calculate_features
+from app.observability.logger import get_logger
+MODEL_PATH  = "data/models/xgb_alpha.json"
+WORKER_PATH = "app/ml/xgb_worker.py"
+logger = get_logger(__name__)
 
 
-MODEL_PATH = "data/models/xgb_alpha.json"
-
-
-def run_ml_scoring_pipeline(universe: List[str], price_df: pd.DataFrame) -> Dict[str, AssetScore]:
+def run_ml_scoring_pipeline(
+    parquet_path: str,
+    universe: List[str],
+    macro: Dict[str, float] | None = None,
+) -> Dict[str, float]:
     """
-    Real online inference pipeline. Loads the pre-trained XGBoost model 
-    and predicts alpha for current assets without recalculating/retraining.
-    """
-    results = {}
-    naive = False
-    
-    if not os.path.exists(MODEL_PATH):
-        print(f"[WARNING] XGBoost model ({MODEL_PATH}) not found! Returning naive scores. Did you run train_xgb.py?")
-        naive = True
-    else:
-        model = xgb.XGBRegressor()
-        model.load_model(MODEL_PATH)
+    Online inference pipeline.
+    Runs XGBoost in an isolated subprocess (avoids Mac ARM OpenMP segfault).
 
-    for ticker in universe:
-        if ticker not in price_df.columns:
-            continue
-        
-        p = price_df[ticker].dropna()
-        if len(p) < 150: # Not enough history to fill rolling 126d features
-            continue
-            
-        # Get strictly the latest row of features for inference
-        features = calculate_features(p).iloc[-1:]
-        features = features.fillna(0) # clean rare NaNs
-        
-        if naive:
-            # Fallback naive logic
-            alpha_pred = float(features["mom_1m"].values[0])
-        else:
-            # Real XGBoost Inference Call
-            alpha_pred = float(model.predict(features)[0])
-            
-        factors = FactorScores(
-            momentum=float(features["mom_3m"].values[0]),
-            volatility=float(features["vol_20d"].values[0]),
-            quality=float(features["macd_hist"].values[0]),
-            extra_factors={
-                "rsi": float(features["rsi_14"].values[0]),
-                "xgb_alpha": alpha_pred
-            }
+    1. Requires an explicit macro snapshot from the data layer.
+    2. Spawns app/ml/xgb_worker.py as a child process.
+    3. Passes parquet_path, universe, and macro dict via stdin JSON.
+    4. Returns Dict[ticker -> predicted_21d_alpha].
+    """
+    if macro is None:
+        raise ValueError("run_ml_scoring_pipeline requires an explicit macro snapshot.")
+
+    payload = json.dumps({
+        "parquet_path": parquet_path,
+        "universe":     universe,
+        "macro":        macro,
+    })
+
+    try:
+        result = subprocess.run(
+            [sys.executable, WORKER_PATH],
+            input=payload,
+            capture_output=True,
+            text=True,
+            timeout=120,
+            env={**os.environ,
+                 "KMP_DUPLICATE_LIB_OK": "TRUE",
+                 "TOKENIZERS_PARALLELISM": "false"},
         )
-        
-        results[ticker] = AssetScore(
-            asset_ticker=ticker,
-            factors=factors,
-            overall_score=alpha_pred,
-            confidence=0.85 # XGBoost predict margins can be mapped here later
-        )
-        
-    return results
+
+        if result.returncode != 0:
+            raise RuntimeError(f"ML worker failed: {result.stderr[-1000:]}")
+
+        scores: Dict[str, float] = json.loads(result.stdout.strip())
+        for ticker, alpha in scores.items():
+            logger.info("Scored %s with predicted return %+0.4f.", ticker, alpha)
+        return scores
+
+    except subprocess.TimeoutExpired:
+        raise RuntimeError("ML worker timed out after 120s.")
+    except Exception as e:
+        raise RuntimeError(f"ML scoring pipeline failed: {e}") from e
