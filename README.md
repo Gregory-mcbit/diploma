@@ -1,45 +1,93 @@
-# Multi-Agent AI Investment System
+# Multi-Agent Investment Research System
 
-An intelligent investment decision-support system built on a multi-agent architecture. The project combines the capabilities of modern large language models (LLMs) with classical machine learning and financial optimization methods.
+A research-oriented decision-support system that coordinates specialized AI agents to analyze U.S. equities, construct a portfolio, evaluate risk, and explain the resulting recommendation.
 
-## 🌟 Core Concept
+This repository contains my bachelor's thesis project. It combines LLM-based reasoning with machine learning, quantitative portfolio optimization, retrieval-augmented memory, and explicit policy constraints. It is an engineering and research prototype—not a proven investment strategy or financial advice.
 
-Unlike simple chatbots, this system does not "guess" market prices. It is a **Hybrid AI** system in which:
-- **LLM (Reasoning)** handles logic, news interpretation, and compliance with the investor's rules.
-- **ML & Math (Precision)** handle calculations, identify statistical patterns, and minimize risk.
-- **Agents** are independent, specialized modules that "deliberate" with one another to build the final portfolio.
+## Architecture
 
-## 🛠 Technology Stack and Applications
+```mermaid
+flowchart TD
+    A[Investor request] --> B[Profile Agent]
+    B --> C[Data Agent]
+    C --> D[Scoring and Regime Agents]
+    D --> E[Portfolio Agent]
+    E --> F[Risk and Backtest]
+    F --> G[Critic Agent]
+    G -->|Revise, up to 3 cycles| E
+    G -->|Approve| H[Explainability Agent]
+```
 
-The project integrates advanced libraries, each serving a specific purpose:
+The system uses two LangGraph workflows: one for portfolio construction and another for ongoing portfolio monitoring. Shared graph state carries profiles, market data, model outputs, risk reports, provenance, and execution traces between agents.
 
-### 1. Intelligence and Orchestration
-*   **LangGraph**: The project's "nervous system." It manages complex agent interaction loops, allows the system to return to a previous step (for example, if the Critic rejects a portfolio), and maintains a shared data state.
-*   **OpenAI (GPT-4o-mini)**: The system's "brain." It is used not for numerical calculations, but for reasoning, text analysis, report generation, and tool coordination.
+## Specialized agents
 
-### 2. Models and Data
-*   **XGBoost**: Used to predict asset alpha (expected excess returns). The model is trained on historical data, including technical indicators and macroeconomic signals.
-*   **yfinance**: The primary tool for obtaining real-time market prices and company fundamentals.
+- **Profile Agent** — converts a natural-language request into a structured investor profile.
+- **Data Agent** — collects market, fundamental, macroeconomic, and news data.
+- **Scoring Agent** — combines ML predictions with technical and fundamental signals.
+- **Regime Agent** — classifies the current market environment.
+- **Portfolio Agent** — selects assets and calculates portfolio weights.
+- **Risk Agent** — evaluates volatility, drawdown, VaR, concentration, and policy constraints.
+- **Critic Agent** — reviews the proposal and can trigger another construction cycle.
+- **Explainability Agent** — produces a structured, human-readable rationale.
+- **Monitoring Agent** — evaluates an existing portfolio and recommends whether action is required.
 
-### 3. Financial Mathematics
-*   **PyPortfolioOpt**: A professional portfolio optimization library. It calculates precise asset weights based on Modern Portfolio Theory and other contemporary methods while enforcing strict constraints (sector limits, cash allocation, etc.).
-*   **Pandas / NumPy**: Industry-standard tools for tabular data manipulation and fast matrix computations.
+## Engineering highlights
 
-### 4. Memory and Knowledge (RAG)
-*   **ChromaDB**: A vector database that stores "institutional knowledge" (investment rules and risk policies) and cached news. This enables agents to quickly retrieve relevant information without making repeated API requests.
+- LangGraph orchestration with conditional routing and up to three critic-driven revision cycles.
+- A 100-asset universe with asset-class, sector, geography, and style metadata.
+- XGBoost scoring based on technical and macroeconomic features.
+- Portfolio optimization with PyPortfolioOpt and Ledoit-Wolf covariance estimation.
+- Three retrieval mechanisms for investment knowledge, cached news, and previous decisions.
+- FastAPI endpoints and a Streamlit interface for portfolio construction and monitoring.
+- Request IDs, correlation IDs, provenance records, decision logs, and persistent execution traces.
+- 58 unit and integration tests covering agents, graphs, API handlers, RAG, policies, risk, and UI helpers.
 
-### 5. Infrastructure
-*   **FastAPI**: A modern web interface through which the system communicates with the outside world, accepting requests for portfolio construction or monitoring.
+## Technology stack
 
-## 📊 How the System Works (Pipeline)
+Python, LangGraph, LangChain, OpenAI, Pydantic, XGBoost, scikit-learn, PyPortfolioOpt, ChromaDB, Hugging Face embeddings, yfinance, FastAPI, Streamlit, Pandas, and NumPy.
 
-1.  **Profiling**: An agent analyzes the user's request, including goals, risk profile, and investment horizon.
-2.  **Data Collection**: An agent collects market prices, news, and macroeconomic indicators such as the VIX and bond yields.
-3.  **Scoring and Market Regime**: The ML model evaluates asset attractiveness, while the Regime Agent determines the current market state (bullish, bearish, or volatile).
-4.  **Portfolio Construction**: Based on the scores and market regime, the mathematical optimizer calculates the optimal asset weights.
-5.  **Review and Risk Analysis**: The portfolio is evaluated for volatility and concentration. A dedicated Critic Agent can send it back for reconstruction if it does not match the user's profile.
-6.  **Explanation**: The system generates a human-readable report explaining each decision.
+## Running locally
 
-## 🚀 Current Status
+```bash
+git clone https://github.com/Gregory-mcbit/diploma.git
+cd diploma
 
-The system is fully functional for on-demand portfolio construction and monitoring. Work is underway on an autonomous scheduler that will automatically review investments at regular intervals in the background.
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+Create a `.env` file:
+
+```env
+OPENAI_API_KEY=your_openai_api_key
+```
+
+Initialize the default knowledge base:
+
+```bash
+python -m app.rag.init_knowledge
+```
+
+Start the API:
+
+```bash
+uvicorn app.api.app:app --reload
+```
+
+Or launch the Streamlit interface:
+
+```bash
+streamlit run app/ui/streamlit_app.py
+```
+
+Run the test suite:
+
+```bash
+pytest
+```
+
+## Disclaimer
+
+This project is for research and educational purposes only. It does not provide financial advice or a recommendation to buy or sell securities.
